@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   flutter_i18n: ^0.37.1
   logger: ^2.6.2
+  window_manager: ^0.5.1
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -23,3 +25,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/i18n/
+    - assets/images/
+flutter_native_splash:
+  color: "#8c246f"
+  image: "assets/images/logo.png"
+  android_12:
+    image: "assets/images/logo_android_12.png"
+    color: "#8c246f"

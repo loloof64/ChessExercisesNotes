@@ -1,6 +1,7 @@
 import 'package:chess_exercises_notes/models/book.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 final gridElementWidth = 200;
 final bookWidth = 150.0;
@@ -15,6 +16,12 @@ class BooksPageWidget extends StatefulWidget {
 
 class _BooksPageWidgetState extends State<BooksPageWidget> {
   final List<Book> _books = [];
+
+  @override
+  void initState() {
+    super.initState();
+    FlutterNativeSplash.remove();
+  }
 
   @override
   Widget build(BuildContext context) {
