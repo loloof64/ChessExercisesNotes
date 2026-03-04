@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:chess_exercises_notes/pages/books.dart';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
 import 'package:flutter_i18n/loaders/decoders/yaml_decode_strategy.dart';
 import 'package:flutter/material.dart';
@@ -75,12 +76,8 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Chess exercises notes",
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
-      ),
+      theme: FlexThemeData.light(scheme: FlexScheme.greenM3),
+      darkTheme: FlexThemeData.dark(scheme: FlexScheme.blueWhale),
       home: BooksPageWidget(),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: [
