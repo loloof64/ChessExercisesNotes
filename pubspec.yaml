@@ -15,6 +15,7 @@ dependencies:
   logger: ^2.6.2
   window_manager: ^0.5.1
   flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -26,6 +27,17 @@ flutter:
   assets:
     - assets/i18n/
     - assets/images/
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 22
+  adaptive_icon_background: "#8c246f"
+  adaptive_icon_foreground: "assets/images/logo.png"
+  adaptive_icon_foreground_inset: 32
+  windows:
+    generate: true
+    image_path: "assets/images/logo.png"
+    icon_size: 256
 flutter_native_splash:
   color: "#8c246f"
   image: "assets/images/logo.png"
