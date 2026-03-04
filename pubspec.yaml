@@ -1,6 +1,6 @@
 name: chess_exercises_notes
 description: "Syncronize your chess exercises books answers across your devices."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0+1
 
 environment:
@@ -9,6 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_i18n: ^0.37.1
+  logger: ^2.6.2
 
 dev_dependencies:
   flutter_test:
@@ -17,3 +21,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/i18n/

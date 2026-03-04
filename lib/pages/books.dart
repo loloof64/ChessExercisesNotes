@@ -1,5 +1,6 @@
 import 'package:chess_exercises_notes/models/book.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_i18n/widgets/i18n_text.dart';
 
 final gridElementWidth = 200;
 final bookWidth = 150.0;
@@ -13,16 +14,7 @@ class BooksPageWidget extends StatefulWidget {
 }
 
 class _BooksPageWidgetState extends State<BooksPageWidget> {
-  final List<Book> _books = [
-    Book(
-      title: "Tactique aux échecs pour les débutants",
-      authors: ["Viktor Vamos"],
-    ),
-    Book(
-      title: "La tactique aux échecs pour les enfants",
-      authors: ["John Nunn"],
-    ),
-  ];
+  final List<Book> _books = [];
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +25,7 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
       return BookWidget(relatedBook: currentBook);
     }).toList();
     return Scaffold(
-      appBar: AppBar(title: Text("Books page")),
+      appBar: AppBar(title: I18nText("pages.books.title")),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: GridView.count(

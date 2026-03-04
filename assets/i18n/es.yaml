@@ -1,0 +1,8 @@
+app:
+  title: "Chess exercises notes"
+buttons:
+  ok: "Aceptar"
+  cancel: "Cancelar"
+pages:
+  books:
+    title: "Libros"
