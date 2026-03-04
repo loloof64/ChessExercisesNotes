@@ -1,12 +1,14 @@
 import 'dart:io';
 
 import 'package:chess_exercises_notes/pages/books.dart';
+import 'package:chess_exercises_notes/providers/dark_theme_provider.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
 import 'package:flutter_i18n/loaders/decoders/yaml_decode_strategy.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -35,7 +37,7 @@ void main() async {
     WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   }
-  runApp(home);
+  runApp(ProviderScope(child: home));
 }
 
 class AppMobile extends StatelessWidget {
@@ -69,15 +71,17 @@ class _AppDesktopState extends State<AppDesktop> with WindowListener {
   Widget build(BuildContext context) => MainApp();
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends ConsumerWidget {
   const MainApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final inDarkMode = ref.watch(darkThemeProvider);
     return MaterialApp(
       title: "Chess exercises notes",
       theme: FlexThemeData.light(scheme: FlexScheme.greenM3),
       darkTheme: FlexThemeData.dark(scheme: FlexScheme.blueWhale),
+      themeMode: inDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: BooksPageWidget(),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: [

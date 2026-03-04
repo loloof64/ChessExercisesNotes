@@ -1,4 +1,5 @@
 import 'package:chess_exercises_notes/models/book.dart';
+import 'package:chess_exercises_notes/pages/widgets/common_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -33,6 +34,7 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
     }).toList();
     return Scaffold(
       appBar: AppBar(title: I18nText("pages.books.title")),
+      drawer: CommonDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: GridView.count(

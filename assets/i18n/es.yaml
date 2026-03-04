@@ -4,3 +4,7 @@ buttons:
 pages:
   books:
     title: "Libros"
+options:
+  title: "Opciones"
+  dark_mode:
+    label: "Usar modo oscuro"
