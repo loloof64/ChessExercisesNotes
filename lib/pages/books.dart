@@ -257,6 +257,7 @@ class BookWidget extends StatelessWidget {
       width: bookWidth,
       height: bookHeight,
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.0),
         border: BoxBorder.all(
           width: 1.0,
           color: Theme.of(context).colorScheme.primary,
@@ -301,10 +302,24 @@ class BookWidget extends StatelessWidget {
                   children: [
                     IconButton.outlined(
                       onPressed: () {},
+                      style: ButtonStyle(
+                        side: WidgetStateProperty.all(
+                          BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
                       icon: Icon(Icons.edit, color: Colors.blue),
                     ),
                     IconButton.outlined(
                       onPressed: onDeleteRequest,
+                      style: ButtonStyle(
+                        side: WidgetStateProperty.all(
+                          BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
                       icon: Icon(Icons.delete, color: Colors.red),
                     ),
                   ],
