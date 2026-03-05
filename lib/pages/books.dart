@@ -256,7 +256,13 @@ class BookWidget extends StatelessWidget {
     return Container(
       width: bookWidth,
       height: bookHeight,
-      decoration: BoxDecoration(border: BoxBorder.all(width: 1.0)),
+      decoration: BoxDecoration(
+        border: BoxBorder.all(
+          width: 1.0,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        color: Theme.of(context).colorScheme.onPrimary,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(4.0),
         child: Stack(
@@ -270,15 +276,18 @@ class BookWidget extends StatelessWidget {
                 Text(
                   relatedBook.title,
                   textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight(700)),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight(700),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
                 if (authors.isNotEmpty)
                   Text(
                     authors,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
               ],
             ),
