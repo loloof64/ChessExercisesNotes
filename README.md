@@ -1,6 +1,6 @@
 # chess_exercises_notes
 
-Syncronize your chess exercises books answers across your devices.
+Synchronize your chess exercises books answers across your devices.
 
 ## Credits
 
