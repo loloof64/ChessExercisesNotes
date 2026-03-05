@@ -10,9 +10,11 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-final gridElementWidth = 200;
-final bookWidth = 150.0;
-final bookHeight = 400.0;
+const gridElementWidth = 200;
+const bookWidth = 150.0;
+const bookHeight = 400.0;
+
+const maxAuthorsCountPerBook = 5;
 
 class BooksPageWidget extends StatefulWidget {
   const BooksPageWidget({super.key});
@@ -24,6 +26,13 @@ class BooksPageWidget extends StatefulWidget {
 class _BooksPageWidgetState extends State<BooksPageWidget> {
   List<Book> _books = [];
   final TextEditingController _newBookNameController = TextEditingController();
+  final List<TextEditingController> _newBookAuthorsControllers = [
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+  ];
 
   @override
   void initState() {
@@ -35,21 +44,27 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
   @override
   void dispose() {
     _newBookNameController.dispose();
+    for (final controller in _newBookAuthorsControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   Future<void> _purposeAddBook() async {
-    final bookName = await _showAddBookDialog();
-    if (bookName == null) return;
+    final Book? bookToCreate = await _showAddBookDialog();
+    if (bookToCreate == null) return;
 
     final Directory appSupportDir = await getApplicationSupportDirectory();
-    final Directory booksDir = Directory(p.join(appSupportDir.path, "books"));
+    final Directory booksDir = Directory(
+      p.join(appSupportDir.path, booksRootFolderName),
+    );
     await booksDir.create();
 
-    final Directory newBookFolder = Directory(p.join(booksDir.path, bookName));
+    final Directory newBookFolder = Directory(
+      p.join(booksDir.path, bookToCreate.folderName),
+    );
     await newBookFolder.create();
-
-    //TODO add metadata yaml inside folder
+    await bookToCreate.serializeToFile(newBookFolder, metadataFileName);
 
     await _refreshFolderItems();
   }
@@ -87,27 +102,60 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
   }
 
   /// Shows the add book dialog.
-  /// Return : (the new book name) String?
-  Future<String?> _showAddBookDialog() async {
-    return await showDialog<String?>(
+  /// Return : (the new book) Book?
+  Future<Book?> _showAddBookDialog() async {
+    return await showDialog<Book?>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
           title: I18nText("pages.books.dialogs.add_book.title"),
-          content: Row(
-            spacing: 5.0,
+          content: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 5.0,
             children: [
-              I18nText("pages.books.dialogs.add_book.label_name"),
-              Expanded(
-                child: TextField(
-                  controller: _newBookNameController,
-                  decoration: InputDecoration(
-                    hint: I18nText("pages.books.dialogs.add_book.placeholder"),
+              Row(
+                spacing: 5.0,
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  I18nText("pages.books.dialogs.add_book.label_name"),
+                  Expanded(
+                    child: TextField(
+                      controller: _newBookNameController,
+                      decoration: InputDecoration(
+                        hint: I18nText(
+                          "pages.books.dialogs.add_book.placeholder_name",
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
+              for (
+                var line = 0;
+                line < _newBookAuthorsControllers.length;
+                line++
+              )
+                Row(
+                  spacing: 5.0,
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    I18nText("pages.books.dialogs.add_book.label_author"),
+                    Expanded(
+                      child: TextField(
+                        controller: _newBookAuthorsControllers[line],
+                        decoration: InputDecoration(
+                          hint: I18nText(
+                            "pages.books.dialogs.add_book.placeholder_author",
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
           actions: [
@@ -119,7 +167,18 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
             OkButton(
               onPressed: () async {
                 final purposedNewName = _newBookNameController.text;
-                final isUnique = !await _isFolderNameReserved(purposedNewName);
+                final securedFolderName = secureFolderName(purposedNewName);
+                final isFolderUnique = !await _isFolderNameReserved(
+                  securedFolderName,
+                );
+                final authors = <String>[];
+
+                for (final controller in _newBookAuthorsControllers) {
+                  if (controller.text.isNotEmpty) {
+                    authors.add(controller.text);
+                  }
+                }
+
                 if (!dialogContext.mounted) return;
 
                 if (purposedNewName.isEmpty) {
@@ -131,8 +190,17 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
                     ),
                   );
                   return;
-                } else if (isUnique) {
-                  Navigator.of(dialogContext).pop(purposedNewName);
+                } else if (isFolderUnique) {
+                  _newBookNameController.clear();
+                  for (final controller in _newBookAuthorsControllers) {
+                    controller.clear();
+                  }
+                  final createdBook = Book(
+                    folderName: securedFolderName,
+                    title: purposedNewName,
+                    authors: authors,
+                  );
+                  Navigator.of(dialogContext).pop(createdBook);
                 } else {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
                     SnackBar(
@@ -153,7 +221,9 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
 
   Future<void> _deleteBook(String bookFolderName) async {
     final Directory appSupportDir = await getApplicationSupportDirectory();
-    final Directory booksDir = Directory(p.join(appSupportDir.path, "books"));
+    final Directory booksDir = Directory(
+      p.join(appSupportDir.path, booksRootFolderName),
+    );
     await booksDir.create();
 
     final Directory bookFolder = Directory(
@@ -178,14 +248,22 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
 
   Future<void> _refreshFolderItems() async {
     final Directory appSupportDir = await getApplicationSupportDirectory();
-    final Directory booksDir = Directory(p.join(appSupportDir.path, "books"));
+    final Directory booksDir = Directory(
+      p.join(appSupportDir.path, booksRootFolderName),
+    );
     await booksDir.create();
 
     final children = await listSubdirectoryNames(booksDir);
     final newBooks = <Book>[];
     for (final child in children) {
-      //TODO read authors from book yaml
-      newBooks.add(Book(folderName: child, title: child, authors: <String>[]));
+      final currentBookDirectory = Directory(p.join(booksDir.path, child));
+      await currentBookDirectory.create();
+
+      final relatedBook = await getBookFromFile(
+        currentBookDirectory,
+        metadataFileName,
+      );
+      newBooks.add(relatedBook);
     }
 
     setState(() {
@@ -195,7 +273,9 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
 
   Future<bool> _isFolderNameReserved(String folderName) async {
     final Directory appSupportDir = await getApplicationSupportDirectory();
-    final Directory booksDir = Directory(p.join(appSupportDir.path, "books"));
+    final Directory booksDir = Directory(
+      p.join(appSupportDir.path, booksRootFolderName),
+    );
     await booksDir.create();
     final children = await listSubdirectoryNames(booksDir);
 
@@ -211,10 +291,9 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
       return BookWidget(
         relatedBook: currentBook,
         onDeleteRequest: () {
-          //TODO get book title from metadata yaml file
           _purposeConfirmDeleteBook(
             bookFolderName: currentBook.folderName,
-            bookTitle: currentBook.folderName,
+            bookTitle: currentBook.title,
           );
         },
       );
