@@ -17,9 +17,11 @@ class ChaptersPageWidget extends StatefulWidget {
     super.key,
     required this.bookFolderName,
     required this.bookTitle,
+    required this.bookAuthors,
   });
   final String bookFolderName;
   final String bookTitle;
+  final String? bookAuthors;
 
   @override
   State<ChaptersPageWidget> createState() => _ChaptersPageWidgetState();
@@ -387,6 +389,27 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
                       ),
                     ],
                   ),
+                  if (widget.bookAuthors != null)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent.shade200,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 12,
+                            ),
+                            child: Text(
+                              widget.bookAuthors!,
+                              style: TextStyle(color: Colors.black87),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   Expanded(
                     child: GridView.count(
                       crossAxisCount: gridCrossAxisCount,

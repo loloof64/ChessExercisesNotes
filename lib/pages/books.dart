@@ -195,6 +195,7 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
   void _navigateIntoItem({
     required String bookFolderName,
     required String bookTitle,
+    required String? bookAuthors,
   }) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -202,6 +203,7 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
           return ChaptersPageWidget(
             bookFolderName: bookFolderName,
             bookTitle: bookTitle,
+            bookAuthors: bookAuthors,
           );
         },
       ),
@@ -255,6 +257,9 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
     final gridCrossAxisCount = (screenWidth / gridElementWidth).floor();
 
     final booksWidgets = _books.map((currentBook) {
+      final currentBookAuthors = currentBook.authors.isEmpty
+          ? null
+          : currentBook.authors.join(", ");
       return GridItemWidget(
         relatedItem: currentBook.toGridItem(),
         onEditRequest: () {
@@ -273,6 +278,7 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
           _navigateIntoItem(
             bookFolderName: currentBook.folderName,
             bookTitle: currentBook.title,
+            bookAuthors: currentBookAuthors,
           );
         },
       );
