@@ -12,6 +12,6 @@ class Answer {
     final file = File(path);
 
     await file.create();
-    await file.writeAsString(content);
+    await file.writeAsString(content, flush: true);
   }
 }

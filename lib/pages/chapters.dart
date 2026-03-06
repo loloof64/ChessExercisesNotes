@@ -172,7 +172,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
                     SnackBar(
                       content: I18nText(
-                        "pages.books.dialogs.snack_errors.already_used_name",
+                        "pages.chapters.dialogs.snack_errors.already_used_name",
                       ),
                     ),
                   );

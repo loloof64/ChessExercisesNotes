@@ -123,13 +123,9 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
             OkButton(
               onPressed: () async {
                 final purposedNewName = _newAnswerNameController.text;
-                final usedNewName = purposedNewName.endsWith(".txt")
-                    ? purposedNewName
-                    : "$purposedNewName.txt";
-                final securedAnswerName = secureFolderName(usedNewName);
-                final isFolderUnique = !await _isFileNameReserved(
-                  securedAnswerName,
-                );
+                final securedAnswerName = secureFolderName(purposedNewName);
+                final usedName = "$securedAnswerName.txt";
+                final isFileUnique = !await _isFileNameReserved(usedName);
 
                 if (!dialogContext.mounted) return;
 
@@ -138,23 +134,24 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
                     SnackBar(
                       content: I18nText(
-                        "pages.chapters.dialogs.add_chapter.snack_errors.empty_name",
+                        "pages.answers.dialogs.add_chapter.snack_errors.empty_name",
                       ),
                     ),
                   );
                   return;
-                } else if (isFolderUnique) {
-                  _newAnswerNameController.clear();
+                } else if (isFileUnique) {
                   final createdAnswer = Answer(
                     title: _newAnswerNameController.text,
                     content: _newAnswerContentController.text,
                   );
-                  Navigator.of(dialogContext).pop((createdAnswer, usedNewName));
+                  _newAnswerNameController.clear();
+                  _newAnswerContentController.clear();
+                  Navigator.of(dialogContext).pop((createdAnswer, usedName));
                 } else {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
                     SnackBar(
                       content: I18nText(
-                        "pages.books.dialogs.snack_errors.already_used_name",
+                        "pages.answers.dialogs.snack_errors.already_used_name",
                       ),
                     ),
                   );
@@ -183,7 +180,7 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
     );
     await exercisesDir.create();
 
-    final children = await listSubdirectoryNames(exercisesDir);
+    final children = await listFilesNames(exercisesDir);
     return children.contains(fileName);
   }
 
@@ -223,7 +220,9 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
         newAnswers.add(Answer(title: simpleName, content: fileContent));
       }
     }
-    newAnswers.sort();
+    newAnswers.sort((fst, snd) {
+      return fst.title.compareTo(snd.title);
+    });
 
     setState(() {
       _answers = newAnswers;

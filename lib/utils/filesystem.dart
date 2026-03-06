@@ -18,6 +18,19 @@ Future<List<String>> listSubdirectoryNames(Directory dir) async {
   return names;
 }
 
+Future<List<String>> listFilesNames(Directory dir) async {
+  final names = <String>[];
+
+  await for (final entity in dir.list()) {
+    if (entity is File) {
+      names.add(p.basename(entity.path));
+    }
+  }
+
+  names.sort();
+  return names;
+}
+
 /// A folder name without special characters
 /// replacing accent letters with simple letters
 String secureFolderName(String originalName) {
