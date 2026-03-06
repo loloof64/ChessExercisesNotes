@@ -36,6 +36,12 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
       TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _refreshFolderItems().then((value) {});
+  }
+
+  @override
   void dispose() {
     _newAnswerContentController.dispose();
     _newAnswerNameController.dispose();
