@@ -23,6 +23,7 @@ class BooksPageWidget extends StatefulWidget {
 }
 
 class _BooksPageWidgetState extends State<BooksPageWidget> {
+  bool _isLoading = false;
   List<Book> _books = [];
   final TextEditingController _newBookNameController = TextEditingController();
   final List<TextEditingController> _newBookAuthorsControllers = [
@@ -262,6 +263,10 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
   }
 
   Future<void> _refreshFolderItems() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final Directory appSupportDir = await getApplicationSupportDirectory();
     final Directory booksDir = Directory(
       p.join(appSupportDir.path, booksRootFolderName),
@@ -283,6 +288,7 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
 
     setState(() {
       _books = newBooks;
+      _isLoading = false;
     });
   }
 
@@ -320,17 +326,30 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
       );
     }).toList();
     return Scaffold(
-      appBar: AppBar(title: I18nText("pages.books.title")),
-      drawer: CommonDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: GridView.count(
-          crossAxisCount: gridCrossAxisCount,
-          mainAxisSpacing: 8.0,
-          crossAxisSpacing: 8.0,
-          children: booksWidgets,
-        ),
+      appBar: AppBar(
+        title: I18nText("pages.books.title"),
+        actions: [
+          IconButton(onPressed: _refreshFolderItems, icon: Icon(Icons.refresh)),
+        ],
       ),
+      drawer: CommonDrawer(),
+      body: _isLoading
+          ? Center(
+              child: SizedBox(
+                width: 300,
+                height: 300,
+                child: CircularProgressIndicator(color: Colors.green),
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: GridView.count(
+                crossAxisCount: gridCrossAxisCount,
+                mainAxisSpacing: 8.0,
+                crossAxisSpacing: 8.0,
+                children: booksWidgets,
+              ),
+            ),
       floatingActionButton: IconButton.outlined(
         color: Colors.lightGreen,
         onPressed: _purposeAddBook,

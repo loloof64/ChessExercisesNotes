@@ -25,6 +25,7 @@ class ChaptersWidget extends StatefulWidget {
 }
 
 class _ChaptersWidgetState extends State<ChaptersWidget> {
+  bool _isLoading = false;
   List<Chapter> _chapters = [];
   final TextEditingController _newChapterNameController =
       TextEditingController();
@@ -182,6 +183,9 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
   }
 
   Future<void> _refreshFolderItems() async {
+    setState(() {
+      _isLoading = true;
+    });
     final Directory appSupportDir = await getApplicationSupportDirectory();
     final Directory booksDir = Directory(
       p.join(appSupportDir.path, booksRootFolderName),
@@ -209,6 +213,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
 
     setState(() {
       _chapters = newChapters;
+      _isLoading = false;
     });
   }
 
@@ -287,48 +292,57 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
             icon: Icon(Icons.arrow_upward),
             onPressed: () => Navigator.of(context).pop(false),
           ),
+          IconButton(onPressed: _refreshFolderItems, icon: Icon(Icons.refresh)),
         ],
       ),
       drawer: CommonDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          spacing: 4,
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.amberAccent.shade100,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 12,
-                    ),
-                    child: Text(
-                      widget.bookTitle,
-                      style: TextStyle(color: Colors.black87),
+      body: _isLoading
+          ? Center(
+              child: SizedBox(
+                width: 300,
+                height: 300,
+                child: CircularProgressIndicator(color: Colors.green),
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                spacing: 4,
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.amberAccent.shade100,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
+                          child: Text(
+                            widget.bookTitle,
+                            style: TextStyle(color: Colors.black87),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: GridView.count(
+                      crossAxisCount: gridCrossAxisCount,
+                      mainAxisSpacing: 8.0,
+                      crossAxisSpacing: 8.0,
+                      children: booksWidgets,
                     ),
                   ),
-                ),
-              ],
-            ),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: gridCrossAxisCount,
-                mainAxisSpacing: 8.0,
-                crossAxisSpacing: 8.0,
-                children: booksWidgets,
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       floatingActionButton: IconButton.outlined(
         color: Colors.lightGreen,
         onPressed: _purposeAddChapter,
