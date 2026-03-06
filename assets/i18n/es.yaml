@@ -37,6 +37,12 @@ pages:
         message: '¿Eliminar el capítulo "{chapterName}"?'
   answers:
     title: "Respuestas"
+    dialogs:
+      add_answer:
+        title: "Agregar una nueva respuesta"
+        label_name: "Respuesta"
+        placeholder_name: "Nombre de la respuesta"
+        label_content: "Contenido"
 options:
   title: "Opciones"
   dark_mode:

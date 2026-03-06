@@ -37,6 +37,12 @@ pages:
         message: 'Remove chapter "{chapterName}" ?'
   answers:
     title: "Answers"
+    dialogs:
+      add_answer:
+        title: "Add a new answer"
+        label_name: "Answer"
+        placeholder_name: "Answer's name"
+        label_content: "Content"
 options:
   title: "Options"
   dark_mode:

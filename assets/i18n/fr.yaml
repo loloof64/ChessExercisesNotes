@@ -37,6 +37,12 @@ pages:
         message: 'Supprimer le chapitre "{chapterName}" ?'
   answers:
     title: "Réponses"
+    dialogs:
+      add_answer:
+        title: "Ajouter une nouvelle réponse"
+        label_name: "Réponse"
+        placeholder_name: "Nom de la réponse"
+        label_content: "Contenu"
 options:
   title: "Options"
   dark_mode:
