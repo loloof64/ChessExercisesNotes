@@ -12,8 +12,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 class ChaptersWidget extends StatefulWidget {
-  const ChaptersWidget({super.key, required this.bookFolderName});
+  const ChaptersWidget({
+    super.key,
+    required this.bookFolderName,
+    required this.bookTitle,
+  });
   final String bookFolderName;
+  final String bookTitle;
 
   @override
   State<ChaptersWidget> createState() => _ChaptersWidgetState();
@@ -277,19 +282,51 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
     return Scaffold(
       appBar: AppBar(
         title: I18nText("pages.chapters.title"),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.arrow_upward),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+        ],
       ),
       drawer: CommonDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: GridView.count(
-          crossAxisCount: gridCrossAxisCount,
-          mainAxisSpacing: 8.0,
-          crossAxisSpacing: 8.0,
-          children: booksWidgets,
+        child: Column(
+          spacing: 4,
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.amberAccent.shade100,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 12,
+                    ),
+                    child: Text(
+                      widget.bookTitle,
+                      style: TextStyle(color: Colors.black87),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: gridCrossAxisCount,
+                mainAxisSpacing: 8.0,
+                crossAxisSpacing: 8.0,
+                children: booksWidgets,
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: IconButton.outlined(

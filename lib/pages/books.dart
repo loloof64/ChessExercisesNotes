@@ -245,11 +245,17 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
     await _refreshFolderItems();
   }
 
-  void _navigateIntoItem(String bookFolderName) {
+  void _navigateIntoItem({
+    required String bookFolderName,
+    required String bookTitle,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (routeContext) {
-          return ChaptersWidget(bookFolderName: bookFolderName);
+          return ChaptersWidget(
+            bookFolderName: bookFolderName,
+            bookTitle: bookTitle,
+          );
         },
       ),
     );
@@ -306,7 +312,10 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
           );
         },
         onClickRequest: () {
-          _navigateIntoItem(currentBook.folderName);
+          _navigateIntoItem(
+            bookFolderName: currentBook.folderName,
+            bookTitle: currentBook.title,
+          );
         },
       );
     }).toList();
