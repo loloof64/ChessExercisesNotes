@@ -12,10 +12,12 @@ class GridItemWidget extends StatelessWidget {
   const GridItemWidget({
     super.key,
     required this.relatedItem,
+    required this.onEditRequest,
     required this.onDeleteRequest,
     required this.onClickRequest,
   });
   final GridItem relatedItem;
+  final void Function() onEditRequest;
   final void Function() onDeleteRequest;
   final void Function() onClickRequest;
 
@@ -73,7 +75,7 @@ class GridItemWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       IconButton.outlined(
-                        onPressed: () {},
+                        onPressed: onEditRequest,
                         style: ButtonStyle(
                           side: WidgetStateProperty.all(
                             BorderSide(

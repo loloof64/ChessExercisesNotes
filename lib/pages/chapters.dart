@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chess_exercises_notes/models/chapter.dart';
 import 'package:chess_exercises_notes/pages/grid_constants.dart';
+import 'package:chess_exercises_notes/pages/widgets/chapters_page_widgets.dart';
 import 'package:chess_exercises_notes/pages/widgets/common_drawer.dart';
 import 'package:chess_exercises_notes/pages/widgets/dialog_buttons.dart';
 import 'package:chess_exercises_notes/pages/widgets/grid_item.dart';
@@ -11,8 +12,8 @@ import 'package:flutter_i18n/widgets/i18n_text.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-class ChaptersWidget extends StatefulWidget {
-  const ChaptersWidget({
+class ChaptersPageWidget extends StatefulWidget {
+  const ChaptersPageWidget({
     super.key,
     required this.bookFolderName,
     required this.bookTitle,
@@ -21,10 +22,10 @@ class ChaptersWidget extends StatefulWidget {
   final String bookTitle;
 
   @override
-  State<ChaptersWidget> createState() => _ChaptersWidgetState();
+  State<ChaptersPageWidget> createState() => _ChaptersPageWidgetState();
 }
 
-class _ChaptersWidgetState extends State<ChaptersWidget> {
+class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
   bool _isLoading = false;
   List<Chapter> _chapters = [];
   final TextEditingController _newChapterNameController =
@@ -265,6 +266,54 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
     //TODO navigate into chapter
   }
 
+  Future<void> _purposeEditChapter({
+    required String chapterFolderName,
+    required Chapter relatedChapter,
+  }) async {
+    final Chapter? chapterToUpdate = await _showEditChapterDialog(
+      chapterFolderName: chapterFolderName,
+      relatedChapter: relatedChapter,
+    );
+    if (chapterToUpdate == null) return;
+
+    final Directory appSupportDir = await getApplicationSupportDirectory();
+    final Directory booksDir = Directory(
+      p.join(appSupportDir.path, booksRootFolderName),
+    );
+    await booksDir.create();
+
+    final Directory chaptersDir = Directory(
+      p.join(booksDir.path, chapterFolderName),
+    );
+    await chaptersDir.create();
+
+    final Directory newChapterFolder = Directory(
+      p.join(chaptersDir.path, chapterToUpdate.folderName),
+    );
+    await newChapterFolder.create();
+
+    await chapterToUpdate.serializeToFile(newChapterFolder, metadataFileName);
+    await _refreshFolderItems();
+  }
+
+  Future<Chapter?> _showEditChapterDialog({
+    required String chapterFolderName,
+    required Chapter relatedChapter,
+  }) async {
+    _newChapterNameController.text = relatedChapter.name;
+    final newBook = await showDialog<Chapter>(
+      context: context,
+      builder: (dialogContex) {
+        return EditChapterWidget(
+          isInAddMode: false,
+          newChapterNameController: _newChapterNameController,
+          isFolderNameReserved: _isFolderNameReserved,
+        );
+      },
+    );
+    return newBook;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.widthOf(context);
@@ -273,6 +322,12 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
     final booksWidgets = _chapters.map((currentChapter) {
       return GridItemWidget(
         relatedItem: currentChapter.toGridItem(),
+        onEditRequest: () {
+          _purposeEditChapter(
+            chapterFolderName: currentChapter.folderName,
+            relatedChapter: currentChapter,
+          );
+        },
         onDeleteRequest: () {
           _purposeConfirmDeleteChapter(
             chapterFolderName: currentChapter.folderName,

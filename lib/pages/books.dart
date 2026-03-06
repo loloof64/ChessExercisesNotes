@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:chess_exercises_notes/models/book.dart';
 import 'package:chess_exercises_notes/pages/chapters.dart';
 import 'package:chess_exercises_notes/pages/grid_constants.dart';
+import 'package:chess_exercises_notes/pages/widgets/books_page_widgets.dart';
 import 'package:chess_exercises_notes/pages/widgets/common_drawer.dart';
 import 'package:chess_exercises_notes/pages/widgets/dialog_buttons.dart';
 import 'package:chess_exercises_notes/pages/widgets/grid_item.dart';
@@ -48,6 +49,53 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  Future<Book?> _showEditBookDialog({
+    required String bookFolderName,
+    required Book relatedBook,
+  }) async {
+    _newBookNameController.text = relatedBook.title;
+    for (var i = 0; i < relatedBook.authors.length; i++) {
+      _newBookAuthorsControllers[i].text = relatedBook.authors[i];
+    }
+    final newBook = await showDialog<Book>(
+      context: context,
+      builder: (dialogContex) {
+        return EditBookWidget(
+          isInAddMode: false,
+          newBookNameController: _newBookNameController,
+          newBookAuthorsControllers: _newBookAuthorsControllers,
+          isFolderNameReserved: _isFolderNameReserved,
+        );
+      },
+    );
+    return newBook;
+  }
+
+  Future<void> _purposeEditBook({
+    required String bookFolderName,
+    required Book relatedBook,
+  }) async {
+    final Book? bookToUpdate = await _showEditBookDialog(
+      bookFolderName: bookFolderName,
+      relatedBook: relatedBook,
+    );
+    if (bookToUpdate == null) return;
+
+    final Directory appSupportDir = await getApplicationSupportDirectory();
+    final Directory booksDir = Directory(
+      p.join(appSupportDir.path, booksRootFolderName),
+    );
+    await booksDir.create();
+
+    final Directory newBookFolder = Directory(
+      p.join(booksDir.path, bookToUpdate.folderName),
+    );
+    await newBookFolder.create();
+    await bookToUpdate.serializeToFile(newBookFolder, metadataFileName);
+
+    await _refreshFolderItems();
   }
 
   Future<void> _purposeAddBook() async {
@@ -107,113 +155,11 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
     return await showDialog<Book?>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: I18nText("pages.books.dialogs.add_book.title"),
-          content: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 5.0,
-            children: [
-              Row(
-                spacing: 5.0,
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  I18nText("pages.books.dialogs.add_book.label_name"),
-                  Expanded(
-                    child: TextField(
-                      controller: _newBookNameController,
-                      decoration: InputDecoration(
-                        hint: I18nText(
-                          "pages.books.dialogs.add_book.placeholder_name",
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              for (
-                var line = 0;
-                line < _newBookAuthorsControllers.length;
-                line++
-              )
-                Row(
-                  spacing: 5.0,
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    I18nText("pages.books.dialogs.add_book.label_author"),
-                    Expanded(
-                      child: TextField(
-                        controller: _newBookAuthorsControllers[line],
-                        decoration: InputDecoration(
-                          hint: I18nText(
-                            "pages.books.dialogs.add_book.placeholder_author",
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-            ],
-          ),
-          actions: [
-            CancelButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(null);
-              },
-            ),
-            OkButton(
-              onPressed: () async {
-                final purposedNewName = _newBookNameController.text;
-                final securedFolderName = secureFolderName(purposedNewName);
-                final isFolderUnique = !await _isFolderNameReserved(
-                  securedFolderName,
-                );
-                final authors = <String>[];
-
-                for (final controller in _newBookAuthorsControllers) {
-                  if (controller.text.isNotEmpty) {
-                    authors.add(controller.text);
-                  }
-                }
-
-                if (!dialogContext.mounted) return;
-
-                if (purposedNewName.isEmpty) {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(
-                      content: I18nText(
-                        "pages.books.dialogs.snack_errors.empty_name",
-                      ),
-                    ),
-                  );
-                  return;
-                } else if (isFolderUnique) {
-                  _newBookNameController.clear();
-                  for (final controller in _newBookAuthorsControllers) {
-                    controller.clear();
-                  }
-                  final createdBook = Book(
-                    folderName: securedFolderName,
-                    title: purposedNewName,
-                    authors: authors,
-                  );
-                  Navigator.of(dialogContext).pop(createdBook);
-                } else {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(
-                      content: I18nText(
-                        "pages.books.dialogs.snack_errors.already_used_name",
-                      ),
-                    ),
-                  );
-                  return;
-                }
-              },
-            ),
-          ],
+        return EditBookWidget(
+          isInAddMode: true,
+          newBookNameController: _newBookNameController,
+          newBookAuthorsControllers: _newBookAuthorsControllers,
+          isFolderNameReserved: _isFolderNameReserved,
         );
       },
     );
@@ -253,7 +199,7 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (routeContext) {
-          return ChaptersWidget(
+          return ChaptersPageWidget(
             bookFolderName: bookFolderName,
             bookTitle: bookTitle,
           );
@@ -311,6 +257,12 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
     final booksWidgets = _books.map((currentBook) {
       return GridItemWidget(
         relatedItem: currentBook.toGridItem(),
+        onEditRequest: () {
+          _purposeEditBook(
+            bookFolderName: currentBook.folderName,
+            relatedBook: currentBook,
+          );
+        },
         onDeleteRequest: () {
           _purposeConfirmDeleteBook(
             bookFolderName: currentBook.folderName,
