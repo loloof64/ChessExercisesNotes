@@ -1,18 +1,17 @@
 import 'dart:io';
 
 import 'package:chess_exercises_notes/models/book.dart';
+import 'package:chess_exercises_notes/pages/chapters.dart';
+import 'package:chess_exercises_notes/pages/grid_constants.dart';
 import 'package:chess_exercises_notes/pages/widgets/common_drawer.dart';
 import 'package:chess_exercises_notes/pages/widgets/dialog_buttons.dart';
+import 'package:chess_exercises_notes/pages/widgets/grid_item.dart';
 import 'package:chess_exercises_notes/utils/filesystem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-
-const gridElementWidth = 200;
-const bookWidth = 150.0;
-const bookHeight = 400.0;
 
 const maxAuthorsCountPerBook = 5;
 
@@ -185,7 +184,7 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
                     SnackBar(
                       content: I18nText(
-                        "pages.books.dialogs.add_book.snack_errors.empty_name",
+                        "pages.books.dialogs.snack_errors.empty_name",
                       ),
                     ),
                   );
@@ -205,7 +204,7 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
                     SnackBar(
                       content: I18nText(
-                        "pages.books.dialogs.add_book.snack_errors.already_used_name",
+                        "pages.books.dialogs.snack_errors.already_used_name",
                       ),
                     ),
                   );
@@ -244,6 +243,16 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
     await bookFolder.create();
     await bookFolder.delete(recursive: true);
     await _refreshFolderItems();
+  }
+
+  void _navigateIntoItem(String bookFolderName) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (routeContext) {
+          return ChaptersWidget(bookFolderName: bookFolderName);
+        },
+      ),
+    );
   }
 
   Future<void> _refreshFolderItems() async {
@@ -288,13 +297,16 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
     final gridCrossAxisCount = (screenWidth / gridElementWidth).floor();
 
     final booksWidgets = _books.map((currentBook) {
-      return BookWidget(
-        relatedBook: currentBook,
+      return GridItemWidget(
+        relatedItem: currentBook.toGridItem(),
         onDeleteRequest: () {
           _purposeConfirmDeleteBook(
             bookFolderName: currentBook.folderName,
             bookTitle: currentBook.title,
           );
+        },
+        onClickRequest: () {
+          _navigateIntoItem(currentBook.folderName);
         },
       );
     }).toList();
@@ -314,99 +326,6 @@ class _BooksPageWidgetState extends State<BooksPageWidget> {
         color: Colors.lightGreen,
         onPressed: _purposeAddBook,
         icon: Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class BookWidget extends StatelessWidget {
-  const BookWidget({
-    super.key,
-    required this.relatedBook,
-    required this.onDeleteRequest,
-  });
-  final Book relatedBook;
-  final void Function() onDeleteRequest;
-
-  @override
-  Widget build(BuildContext context) {
-    final authors = relatedBook.authors.join("\n");
-
-    return Container(
-      width: bookWidth,
-      height: bookHeight,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16.0),
-        border: BoxBorder.all(
-          width: 1.0,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        color: Theme.of(context).colorScheme.onPrimary,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: Stack(
-          children: [
-            Column(
-              spacing: 5,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  relatedBook.title,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight(700),
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                if (authors.isNotEmpty)
-                  Text(
-                    authors,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-              ],
-            ),
-            Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    IconButton.outlined(
-                      onPressed: () {},
-                      style: ButtonStyle(
-                        side: WidgetStateProperty.all(
-                          BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                      icon: Icon(Icons.edit, color: Colors.blue),
-                    ),
-                    IconButton.outlined(
-                      onPressed: onDeleteRequest,
-                      style: ButtonStyle(
-                        side: WidgetStateProperty.all(
-                          BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                      icon: Icon(Icons.delete, color: Colors.red),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

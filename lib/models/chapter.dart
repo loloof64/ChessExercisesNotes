@@ -4,18 +4,16 @@ import 'package:chess_exercises_notes/pages/widgets/grid_item.dart';
 import 'package:yaml_edit/yaml_edit.dart';
 import 'package:path/path.dart' as p;
 
-class Book {
+class Chapter {
   final String folderName;
-  final String title;
-  List<String> authors;
+  final String name;
 
-  Book({required this.folderName, required this.title, required this.authors});
+  Chapter({required this.folderName, required this.name});
 
   Future<void> serializeToFile(Directory baseDirectory, String fileName) async {
     final path = Directory(p.join(baseDirectory.path, fileName)).path;
     final editor = YamlEditor('{}');
-    editor.update(["title"], title);
-    editor.update(["authors"], authors);
+    editor.update(["name"], name);
 
     final yamlText = editor.toString();
     final file = File(path);
@@ -24,19 +22,21 @@ class Book {
   }
 
   GridItem toGridItem() {
-    return GridItem(name: title, authors: authors);
+    return GridItem(name: name, authors: null);
   }
 }
 
-Future<Book> getBookFromFile(Directory baseDirectory, String fileName) async {
+Future<Chapter> getChapterFromFile(
+  Directory baseDirectory,
+  String fileName,
+) async {
   final path = Directory(p.join(baseDirectory.path, fileName)).path;
   final file = File(path);
 
   final content = await file.readAsString();
   final editor = YamlEditor(content);
   final folderName = baseDirectory.path.split(Platform.pathSeparator).last;
-  final title = editor.parseAt(["title"]).value as String;
-  final authors = List<String>.from(editor.parseAt(["authors"]).value);
+  final name = editor.parseAt(["name"]).value as String;
 
-  return Book(folderName: folderName, title: title, authors: authors);
+  return Chapter(folderName: folderName, name: name);
 }

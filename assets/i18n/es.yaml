@@ -11,14 +11,26 @@ pages:
         placeholder_name: "Nombre del libro"
         label_author: "Autor"
         placeholder_author: "Nombre del autor"
-        snack_errors:
-          empty_name: "El nombre está vacío"
-          already_used_name: "Este nombre ya está en uso"
-          inexistant_book: "Este libro no está en la lista"
-    remove_book_confirmation:
-      title: "¿Eliminar libro?"
-      message: '¿Eliminar el libro "{bookName}"?'
-      options:
+      snack_errors:
+        empty_name: "El nombre está vacío"
+        already_used_name: "Este nombre ya está en uso"
+        inexistant_book: "Este libro no está en la lista"
+      remove_book_confirmation:
+        title: "¿Eliminar libro?"
+        message: '¿Eliminar el libro "{bookName}"?'
+  chapters:
+    title: "Capítulos"
+    dialogs:
+      add_chapter:
+        title: "Agregar un nuevo capítulo"
+        label_name: "Nombre"
+        placeholder_name: "Nombre del capítulo"
+      snack_errors:
+        empty_name: "El nombre está vacío"
+        inexistant_chapter: "Este capítulo no está en la lista"
+      remove_chapter_confirmation:
+        title: "¿Eliminar capítulo?"
+        message: '¿Eliminar el capítulo "{chapterName}"?'
   title: "Opciones"
   dark_mode:
     label: "Usar modo oscuro"
