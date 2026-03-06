@@ -82,7 +82,7 @@ class EditChapterWidget extends StatelessWidget {
             else if (!isInAddMode || isFolderUnique) {
               newChapterNameController.clear();
               final createdChapter = Chapter(
-                folderName: securedFolderName,
+                chapterFolderName: securedFolderName,
                 name: purposedNewName,
               );
               Navigator.of(context).pop(createdChapter);

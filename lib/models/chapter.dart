@@ -5,10 +5,10 @@ import 'package:yaml_edit/yaml_edit.dart';
 import 'package:path/path.dart' as p;
 
 class Chapter {
-  final String folderName;
+  final String chapterFolderName;
   final String name;
 
-  Chapter({required this.folderName, required this.name});
+  Chapter({required this.chapterFolderName, required this.name});
 
   Future<void> serializeToFile(Directory baseDirectory, String fileName) async {
     final path = Directory(p.join(baseDirectory.path, fileName)).path;
@@ -35,8 +35,10 @@ Future<Chapter> getChapterFromFile(
 
   final content = await file.readAsString();
   final editor = YamlEditor(content);
-  final folderName = baseDirectory.path.split(Platform.pathSeparator).last;
+  final chapterFolderName = baseDirectory.path
+      .split(Platform.pathSeparator)
+      .last;
   final name = editor.parseAt(["name"]).value as String;
 
-  return Chapter(folderName: folderName, name: name);
+  return Chapter(chapterFolderName: chapterFolderName, name: name);
 }

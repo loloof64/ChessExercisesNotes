@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:chess_exercises_notes/models/chapter.dart';
+import 'package:chess_exercises_notes/pages/answers.dart';
 import 'package:chess_exercises_notes/pages/grid_constants.dart';
 import 'package:chess_exercises_notes/pages/widgets/chapters_page_widgets.dart';
 import 'package:chess_exercises_notes/pages/widgets/common_drawer.dart';
@@ -163,7 +164,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
                 } else if (isFolderUnique) {
                   _newChapterNameController.clear();
                   final createdChapter = Chapter(
-                    folderName: securedFolderName,
+                    chapterFolderName: securedFolderName,
                     name: purposedNewName,
                   );
                   Navigator.of(dialogContext).pop(createdChapter);
@@ -264,8 +265,23 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
     await _refreshFolderItems();
   }
 
-  void _navigateIntoItem(String chapterFolderName) {
-    //TODO navigate into chapter
+  void _navigateIntoItem({
+    required String chapterFolderName,
+    required String chapterName,
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (routeContext) {
+          return AnswerPageWidget(
+            bookTitle: widget.bookTitle,
+            bookAuthors: widget.bookAuthors,
+            bookFolderName: widget.bookFolderName,
+            chapterFolderName: chapterFolderName,
+            chapterName: chapterName,
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _purposeEditChapter({
@@ -290,7 +306,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
     await chaptersDir.create();
 
     final Directory newChapterFolder = Directory(
-      p.join(chaptersDir.path, chapterToUpdate.folderName),
+      p.join(chaptersDir.path, chapterToUpdate.chapterFolderName),
     );
     await newChapterFolder.create();
 
@@ -326,18 +342,21 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
         relatedItem: currentChapter.toGridItem(),
         onEditRequest: () {
           _purposeEditChapter(
-            chapterFolderName: currentChapter.folderName,
+            chapterFolderName: currentChapter.chapterFolderName,
             relatedChapter: currentChapter,
           );
         },
         onDeleteRequest: () {
           _purposeConfirmDeleteChapter(
-            chapterFolderName: currentChapter.folderName,
+            chapterFolderName: currentChapter.chapterFolderName,
             chapterName: currentChapter.name,
           );
         },
         onClickRequest: () {
-          _navigateIntoItem(currentChapter.folderName);
+          _navigateIntoItem(
+            chapterFolderName: currentChapter.chapterFolderName,
+            chapterName: currentChapter.name,
+          );
         },
       );
     }).toList();

@@ -35,6 +35,8 @@ pages:
       remove_chapter_confirmation:
         title: "Supprimer le chapitre ?"
         message: 'Supprimer le chapitre "{chapterName}" ?'
+  answers:
+    title: "Réponses"
 options:
   title: "Options"
   dark_mode:
