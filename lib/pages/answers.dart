@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chess_exercises_notes/models/answer.dart';
 import 'package:chess_exercises_notes/pages/widgets/answers_page_widget.dart';
+import 'package:chess_exercises_notes/pages/widgets/common_drawer.dart';
 import 'package:chess_exercises_notes/pages/widgets/dialog_buttons.dart';
 import 'package:chess_exercises_notes/utils/filesystem.dart';
 import 'package:flutter/material.dart';
@@ -310,6 +311,7 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
           IconButton(onPressed: _refreshFolderItems, icon: Icon(Icons.refresh)),
         ],
       ),
+      drawer: CommonDrawer(),
       body: _isLoading
           ? Center(
               child: SizedBox(
