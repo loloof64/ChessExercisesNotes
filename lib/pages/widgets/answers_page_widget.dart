@@ -24,11 +24,12 @@ class EditAnswerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: I18nText(
-        isInAddMode
-            ? "pages.answers.dialogs.add_answer.title"
-            : "pages.answers.dialogs.edit_answer.title",
-      ),
+      title: isInAddMode
+          ? I18nText("pages.answers.dialogs.add_answer.title")
+          : I18nText(
+              "pages.answers.dialogs.edit_answer.title",
+              translationParams: {"answerName": originalFileName},
+            ),
       content: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

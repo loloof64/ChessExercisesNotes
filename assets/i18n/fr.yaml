@@ -12,7 +12,7 @@ pages:
         label_author: "Auteur"
         placeholder_author: "Nom de l'auteur"
       edit_book:
-        title: "Éditer un livre"
+        title: 'Éditer le livre "{bookName}"'
       snack_errors:
         empty_name: "Le nom est vide"
         already_used_name: "Ce nom est déjà utilisé"
@@ -28,7 +28,7 @@ pages:
         label_name: "Nom"
         placeholder_name: "Nom du chapitre"
       edit_chapter:
-        title: "Éditer un chapitre"
+        title: 'Éditer le chapitre "{chapterName}"'
       snack_errors:
         empty_name: "Le nom est vide"
         already_used_name: "Ce nom est déjà utilisé"
@@ -45,7 +45,7 @@ pages:
         placeholder_name: "Nom de la réponse"
         label_content: "Contenu"
       edit_answer:
-        title: "Éditer une réponse"
+        title: 'Éditer la réponse "{answerName}"'
       snack_errors:
         empty_name: "Le nom est vide"
         already_used_name: "Ce nom est déjà utilisé"

@@ -20,12 +20,14 @@ class EditBookWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final originalTitle = newBookNameController.text;
     return AlertDialog(
-      title: I18nText(
-        isInAddMode
-            ? "pages.books.dialogs.add_book.title"
-            : "pages.books.dialogs.edit_book.title",
-      ),
+      title: isInAddMode
+          ? I18nText("pages.books.dialogs.add_book.title")
+          : I18nText(
+              "pages.books.dialogs.edit_book.title",
+              translationParams: {"bookName": originalTitle},
+            ),
       content: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

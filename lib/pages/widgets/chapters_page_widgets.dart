@@ -18,12 +18,14 @@ class EditChapterWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final originalName = newChapterNameController.text;
     return AlertDialog(
-      title: I18nText(
-        isInAddMode
-            ? "pages.chapters.dialogs.add_chapter.title"
-            : "pages.chapters.dialogs.edit_chapter.title",
-      ),
+      title: isInAddMode
+          ? I18nText("pages.chapters.dialogs.add_chapter.title")
+          : I18nText(
+              "pages.chapters.dialogs.edit_chapter.title",
+              translationParams: {"chapterName": originalName},
+            ),
       content: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
