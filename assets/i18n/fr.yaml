@@ -44,10 +44,15 @@ pages:
         label_name: "Nom (sans extension)"
         placeholder_name: "Nom de la réponse"
         label_content: "Contenu"
+      edit_answer:
+        title: "Éditer une réponse"
       snack_errors:
         empty_name: "Le nom est vide"
         already_used_name: "Ce nom est déjà utilisé"
         inexistant_answer: "Cette réponse n'est pas dans la liste"
+      remove_answer_confirmation:
+        title: "Supprimer la réponse ?"
+        message: 'Supprimer la réponse "{answerName}" ?'
 options:
   title: "Options"
   dark_mode:

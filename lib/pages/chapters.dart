@@ -145,7 +145,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
             OkButton(
               onPressed: () async {
                 final purposedNewName = _newChapterNameController.text;
-                final securedFolderName = secureFolderName(purposedNewName);
+                final securedFolderName = secureFileItemName(purposedNewName);
                 final isFolderUnique = !await _isFolderNameReserved(
                   securedFolderName,
                 );

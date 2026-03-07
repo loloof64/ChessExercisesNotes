@@ -60,7 +60,7 @@ class EditChapterWidget extends StatelessWidget {
         OkButton(
           onPressed: () async {
             final purposedNewName = newChapterNameController.text;
-            final securedFolderName = secureFolderName(purposedNewName);
+            final securedFolderName = secureFileItemName(purposedNewName);
             final isFolderUnique = !await isFolderNameReserved(
               securedFolderName,
             );
@@ -68,7 +68,6 @@ class EditChapterWidget extends StatelessWidget {
             if (!context.mounted) return;
 
             if (purposedNewName.isEmpty) {
-              newChapterNameController.clear();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: I18nText(
@@ -90,7 +89,7 @@ class EditChapterWidget extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: I18nText(
-                    "pages.books.dialogs.snack_errors.already_used_name",
+                    "pages.chapters.dialogs.snack_errors.already_used_name",
                   ),
                 ),
               );

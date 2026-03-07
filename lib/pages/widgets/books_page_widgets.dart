@@ -84,7 +84,7 @@ class EditBookWidget extends StatelessWidget {
         OkButton(
           onPressed: () async {
             final purposedNewName = newBookNameController.text;
-            final securedFolderName = secureFolderName(purposedNewName);
+            final securedFolderName = secureFileItemName(purposedNewName);
             final isFolderUnique = !await isFolderNameReserved(
               securedFolderName,
             );
@@ -99,10 +99,6 @@ class EditBookWidget extends StatelessWidget {
             if (!context.mounted) return;
 
             if (purposedNewName.isEmpty) {
-              newBookNameController.clear();
-              for (final controller in newBookAuthorsControllers) {
-                controller.clear();
-              }
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: I18nText(

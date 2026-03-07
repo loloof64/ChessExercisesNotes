@@ -31,9 +31,9 @@ Future<List<String>> listFilesNames(Directory dir) async {
   return names;
 }
 
-/// A folder name without special characters
+/// A file item name without special characters
 /// replacing accent letters with simple letters
-String secureFolderName(String originalName) {
+String secureFileItemName(String originalName) {
   final withoutDiacritics = removeDiacritics(originalName);
   return withoutDiacritics
       .replaceAll(RegExp(r'[^\w\s-]'), '')

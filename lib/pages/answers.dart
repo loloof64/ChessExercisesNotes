@@ -1,12 +1,20 @@
 import 'dart:io';
 
 import 'package:chess_exercises_notes/models/answer.dart';
+import 'package:chess_exercises_notes/pages/widgets/answers_page_widget.dart';
 import 'package:chess_exercises_notes/pages/widgets/dialog_buttons.dart';
 import 'package:chess_exercises_notes/utils/filesystem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+
+class AnswerData {
+  final Answer answer;
+  final String fileName;
+
+  AnswerData(this.answer, this.fileName);
+}
 
 class AnswerPageWidget extends StatefulWidget {
   const AnswerPageWidget({
@@ -28,7 +36,7 @@ class AnswerPageWidget extends StatefulWidget {
 }
 
 class _AnswerPageWidgetState extends State<AnswerPageWidget> {
-  List<Answer> _answers = <Answer>[];
+  List<AnswerData> _answers = <AnswerData>[];
   bool _isLoading = false;
   final TextEditingController _newAnswerNameController =
       TextEditingController();
@@ -49,7 +57,7 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
   }
 
   Future<void> _purposeAddAnswer() async {
-    final (Answer, String)? answerToCreate = await _showAddAnswerDialog();
+    final AnswerData? answerToCreate = await _showAddAnswerDialog();
     if (answerToCreate == null) return;
 
     final Directory appSupportDir = await getApplicationSupportDirectory();
@@ -66,106 +74,26 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
     );
     await exercisesFolder.create();
 
-    await answerToCreate.$1.serializeToFile(exercisesFolder, answerToCreate.$2);
+    await answerToCreate.answer.serializeToFile(
+      exercisesFolder,
+      answerToCreate.fileName,
+    );
 
     await _refreshFolderItems();
   }
 
   /// Shows the add answer dialog.
-  /// Return : (the new answer, the file name) (Answer, String)?
-  Future<(Answer, String)?> _showAddAnswerDialog() async {
-    return await showDialog<(Answer, String)>(
+  /// Return : (the new answer data) AnswerData?
+  Future<AnswerData?> _showAddAnswerDialog() async {
+    return await showDialog<AnswerData>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: I18nText("pages.answers.dialogs.add_answer.title"),
-          content: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 5.0,
-            children: [
-              Row(
-                spacing: 5.0,
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  I18nText("pages.answers.dialogs.add_answer.label_name"),
-                  Expanded(
-                    child: TextField(
-                      controller: _newAnswerNameController,
-                      decoration: InputDecoration(
-                        hint: I18nText(
-                          "pages.answers.dialogs.add_answer.placeholder_name",
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                spacing: 5.0,
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  I18nText("pages.answers.dialogs.add_answer.label_content"),
-                  Expanded(
-                    child: TextField(
-                      controller: _newAnswerContentController,
-                      minLines: 5,
-                      maxLines: 8,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            CancelButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(null);
-              },
-            ),
-            OkButton(
-              onPressed: () async {
-                final purposedNewName = _newAnswerNameController.text;
-                final securedAnswerName = secureFolderName(purposedNewName);
-                final usedName = "$securedAnswerName.txt";
-                final isFileUnique = !await _isFileNameReserved(usedName);
-
-                if (!dialogContext.mounted) return;
-
-                // Do not test on usedNewName !
-                if (purposedNewName.isEmpty) {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(
-                      content: I18nText(
-                        "pages.answers.dialogs.add_chapter.snack_errors.empty_name",
-                      ),
-                    ),
-                  );
-                  return;
-                } else if (isFileUnique) {
-                  final createdAnswer = Answer(
-                    title: _newAnswerNameController.text,
-                    content: _newAnswerContentController.text,
-                  );
-                  _newAnswerNameController.clear();
-                  _newAnswerContentController.clear();
-                  Navigator.of(dialogContext).pop((createdAnswer, usedName));
-                } else {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(
-                      content: I18nText(
-                        "pages.answers.dialogs.snack_errors.already_used_name",
-                      ),
-                    ),
-                  );
-                  return;
-                }
-              },
-            ),
-          ],
+        return EditAnswerWidget(
+          isInAddMode: true,
+          originalFileName: "",
+          newAnswerNameController: _newAnswerNameController,
+          newAnswerContentController: _newAnswerContentController,
+          isFileNameReserved: _isFileNameReserved,
         );
       },
     );
@@ -211,7 +139,7 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
         .list()
         .where((elt) => elt is File)
         .toList();
-    final newAnswers = <Answer>[];
+    final newAnswers = <AnswerData>[];
 
     for (final child in childrenFiles) {
       final childName = child.path.split(Platform.pathSeparator).last;
@@ -223,11 +151,12 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
       final simpleName = simpleNameList.join(".");
       if (child is File) {
         final fileContent = await child.readAsString();
-        newAnswers.add(Answer(title: simpleName, content: fileContent));
+        final rawAnswer = Answer(title: simpleName, content: fileContent);
+        newAnswers.add(AnswerData(rawAnswer, childName));
       }
     }
     newAnswers.sort((fst, snd) {
-      return fst.title.compareTo(snd.title);
+      return fst.answer.title.compareTo(snd.answer.title);
     });
 
     setState(() {
@@ -236,9 +165,139 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
     });
   }
 
+  Future<void> _purposeEditAnswer({
+    required AnswerData relatedAnswerData,
+  }) async {
+    final AnswerData? answerToUpdate = await _showEditAnswerDialog(
+      relatedAnswerData: relatedAnswerData,
+    );
+    if (answerToUpdate == null) return;
+
+    final Directory appSupportDir = await getApplicationSupportDirectory();
+    final Directory booksDir = Directory(
+      p.join(appSupportDir.path, booksRootFolderName),
+    );
+    await booksDir.create();
+
+    final Directory chaptersDir = Directory(
+      p.join(booksDir.path, widget.bookFolderName),
+    );
+    await chaptersDir.create();
+
+    final Directory chapterFolder = Directory(
+      p.join(chaptersDir.path, widget.chapterFolderName),
+    );
+    await chapterFolder.create();
+
+    // rename file if necessary
+    if (relatedAnswerData.fileName != answerToUpdate.fileName) {
+      File oldFile = File(
+        p.join(chapterFolder.path, relatedAnswerData.fileName),
+      );
+      await oldFile.rename(p.join(chapterFolder.path, answerToUpdate.fileName));
+    }
+
+    await answerToUpdate.answer.serializeToFile(
+      chapterFolder,
+      answerToUpdate.fileName,
+    );
+    await _refreshFolderItems();
+  }
+
+  Future<AnswerData?> _showEditAnswerDialog({
+    required AnswerData relatedAnswerData,
+  }) async {
+    _newAnswerNameController.text = relatedAnswerData.answer.title;
+    _newAnswerContentController.text = relatedAnswerData.answer.content;
+    final newBook = await showDialog<AnswerData>(
+      context: context,
+      builder: (dialogContex) {
+        return EditAnswerWidget(
+          isInAddMode: false,
+          originalFileName: _newAnswerNameController.text,
+          newAnswerNameController: _newAnswerNameController,
+          newAnswerContentController: _newAnswerContentController,
+          isFileNameReserved: _isFileNameReserved,
+        );
+      },
+    );
+    return newBook;
+  }
+
+  Future<void> _purposeConfirmDeleteAnswer({
+    required AnswerData relatedAnswerData,
+  }) async {
+    final confirmation = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: I18nText(
+            "pages.answers.dialogs.remove_answer_confirmation.title",
+          ),
+          content: I18nText(
+            "pages.answers.dialogs.remove_answer_confirmation.message",
+            translationParams: {"answerName": relatedAnswerData.answer.title},
+          ),
+          actions: [
+            CancelButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+            ),
+            OkButton(
+              onPressed: () async {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmation != true) return;
+    await _deleteAnswer(relatedAnswerData);
+  }
+
+  Future<void> _deleteAnswer(AnswerData relatedAnswerData) async {
+    final Directory appSupportDir = await getApplicationSupportDirectory();
+    final Directory booksDir = Directory(
+      p.join(appSupportDir.path, booksRootFolderName),
+    );
+    await booksDir.create();
+
+    final chaptersDir = Directory(p.join(booksDir.path, widget.bookFolderName));
+    await chaptersDir.create();
+
+    final Directory chapterFolder = Directory(
+      p.join(chaptersDir.path, widget.chapterFolderName),
+    );
+    await chapterFolder.create();
+
+    final File answerFile = File(
+      p.join(chapterFolder.path, relatedAnswerData.fileName),
+    );
+
+    if (!await answerFile.exists()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: I18nText(
+            "pages.answers.dialogs.snack_errors.inexistant_answer",
+          ),
+        ),
+      );
+      return;
+    }
+
+    await answerFile.create();
+    await answerFile.delete();
+    await _refreshFolderItems();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final answerTitles = _answers.map((current) => current.title).toList();
+    final answerTitles = _answers
+        .map((current) => current.answer.title)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -330,12 +389,54 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
                   ),
                   Expanded(
                     child: ListView.separated(
-                      itemBuilder: (itemContext, index) => Text(
-                        answerTitles[index],
-                        style: TextStyle(
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      itemBuilder: (itemContext, index) => Row(
+                        spacing: 4.0,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              answerTitles[index],
+                              style: TextStyle(
+                                fontSize: 20.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          IconButton.outlined(
+                            onPressed: () {
+                              final relatedAnswerData = _answers[index];
+                              _purposeEditAnswer(
+                                relatedAnswerData: relatedAnswerData,
+                              );
+                            },
+                            style: ButtonStyle(
+                              side: WidgetStateProperty.all(
+                                BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            icon: Icon(Icons.edit, color: Colors.blue),
+                          ),
+                          IconButton.outlined(
+                            onPressed: () {
+                              final relatedAnswerData = _answers[index];
+                              _purposeConfirmDeleteAnswer(
+                                relatedAnswerData: relatedAnswerData,
+                              );
+                            },
+                            style: ButtonStyle(
+                              side: WidgetStateProperty.all(
+                                BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            icon: Icon(Icons.delete, color: Colors.red),
+                          ),
+                        ],
                       ),
                       separatorBuilder: (itemContext, index) => const Divider(),
                       itemCount: _answers.length,
