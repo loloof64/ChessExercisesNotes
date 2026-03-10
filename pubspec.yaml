@@ -24,13 +24,16 @@ dependencies:
   path: ^1.9.1
   yaml_edit: ^2.2.4
   diacritic: ^0.1.6
+  oauth2_client: ^4.2.3
+  http: ^1.6.0
+  flutter_secure_storage: ^10.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   riverpod_generator: ^4.0.3
-  build_runner: ^2.12.1
+  build_runner: ^2.12.2
 
 flutter:
   uses-material-design: true

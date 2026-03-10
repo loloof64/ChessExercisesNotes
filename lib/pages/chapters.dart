@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:chess_exercises_notes/models/chapter.dart';
+import 'package:chess_exercises_notes/models/local_items/chapter.dart';
 import 'package:chess_exercises_notes/pages/answers.dart';
 import 'package:chess_exercises_notes/pages/grid_constants.dart';
 import 'package:chess_exercises_notes/pages/widgets/chapters_page_widgets.dart';

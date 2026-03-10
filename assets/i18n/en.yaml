@@ -57,3 +57,12 @@ options:
   title: "Options"
   dark_mode:
     label: "Use dark mode"
+  dropbox:
+    login_button: "Login Dropbox"
+    logout_button: "Logout Dropbox"
+  snack_messages:
+    dropbox:
+      connection_success: "Logged in your Dropbox account."
+      connection_error: "Failed to log in your Dropbox account."
+      disconnection_success: "Logged out your Dropbox account."
+      disconnection_error: "Failed to log out your Dropbox account."

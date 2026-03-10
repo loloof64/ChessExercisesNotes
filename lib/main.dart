@@ -13,6 +13,7 @@ import 'package:logger/logger.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   final isDesktop =
       Platform.isWindows ||
       Platform.isMacOS ||
@@ -20,7 +21,6 @@ void main() async {
       Platform.isFuchsia;
   final home = isDesktop ? const AppDesktop() : const AppMobile();
   if (isDesktop) {
-    WidgetsFlutterBinding.ensureInitialized();
     await windowManager.ensureInitialized();
     WindowOptions windowOptions = WindowOptions(
       size: Size(800, 600),
@@ -34,7 +34,6 @@ void main() async {
       await windowManager.focus();
     });
   } else {
-    WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   }
   runApp(ProviderScope(child: home));

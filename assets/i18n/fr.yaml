@@ -57,3 +57,12 @@ options:
   title: "Options"
   dark_mode:
     label: "Utiliser mode sombre"
+  dropbox:
+    login_button: "Se connecter à Dropbox"
+    logout_button: "Se déconnecter de Dropbox"
+  snack_messages:
+    dropbox:
+      connection_success: "Connecté à votre compte Dropbox."
+      connection_error: "Échec de la connexion à votre compte Dropbox."
+      disconnection_success: "Déconnecté de votre compte Dropbox."
+      disconnection_error: "Échec de la déconnexion de votre compte Dropbox."

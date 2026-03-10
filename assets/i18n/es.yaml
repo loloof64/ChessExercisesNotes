@@ -57,3 +57,12 @@ options:
   title: "Opciones"
   dark_mode:
     label: "Usar modo oscuro"
+  dropbox:
+    login_button: "Iniciar sesión en Dropbox"
+    logout_button: "Cerrar sesión de Dropbox"
+  snack_messages:
+    dropbox:
+      connection_success: "Conectado a tu cuenta de Dropbox."
+      connection_error: "No se pudo iniciar sesión en tu cuenta de Dropbox."
+      disconnection_success: "Se cerró la sesión de tu cuenta de Dropbox."
+      disconnection_error: "No se pudo cerrar la sesión de tu cuenta de Dropbox."

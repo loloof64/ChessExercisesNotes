@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:chess_exercises_notes/models/book.dart';
+import 'package:chess_exercises_notes/models/local_items/book.dart';
 import 'package:chess_exercises_notes/pages/chapters.dart';
 import 'package:chess_exercises_notes/pages/grid_constants.dart';
 import 'package:chess_exercises_notes/pages/widgets/books_page_widgets.dart';
@@ -11,19 +11,20 @@ import 'package:chess_exercises_notes/utils/filesystem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 const maxAuthorsCountPerBook = 5;
 
-class BooksPageWidget extends StatefulWidget {
+class BooksPageWidget extends ConsumerStatefulWidget {
   const BooksPageWidget({super.key});
 
   @override
-  State<BooksPageWidget> createState() => _BooksPageWidgetState();
+  ConsumerState<BooksPageWidget> createState() => _BooksPageWidgetState();
 }
 
-class _BooksPageWidgetState extends State<BooksPageWidget> {
+class _BooksPageWidgetState extends ConsumerState<BooksPageWidget> {
   bool _isLoading = false;
   List<Book> _books = [];
   final TextEditingController _newBookNameController = TextEditingController();

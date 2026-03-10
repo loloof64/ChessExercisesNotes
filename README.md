@@ -2,6 +2,14 @@
 
 Synchronize your chess exercises books answers across your devices.
 
+## For developpers
+
+### Riverpod files generation
+
+```bash
+dart run build_runner watch -d
+```
+
 ## Credits
 
 ### Images
