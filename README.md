@@ -1,6 +1,10 @@
 # chess_exercises_notes
 
-Synchronize your chess exercises books answers across your devices.
+Synchronize your chess exercises books answers across your devices :
+
+- you can create books references, chapters references and answers files locally
+- you can connect into your dropbox account
+- you can synchronize elements between your local filesystem and your dropbox account
 
 ## For developpers
 

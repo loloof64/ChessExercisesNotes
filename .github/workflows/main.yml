@@ -1,41 +1,346 @@
 # ══════════════════════════════════════════════════════════════════════════════
 # metadata
 # ══════════════════════════════════════════════════════════════════════════════
-name: build_releases                        
-run-name: Tests for ${{ github.ref_name }}
+name: build_releases
+run-name: Release ${{ github.ref_name }}
 
 # ══════════════════════════════════════════════════════════════════════════════
 # triggers
 # ══════════════════════════════════════════════════════════════════════════════
 on:
   push:
-    branches: [releases]
-  workflow_dispatch:            # Manual trigger on Github interface
+    branches: [release]
+  workflow_dispatch:
 
 # ══════════════════════════════════════════════════════════════════════════════
 # security (permissions)
 # ══════════════════════════════════════════════════════════════════════════════
 permissions:
-  contents: read
+  contents: write
 
 # ══════════════════════════════════════════════════════════════════════════════
-# global configuration (Usable by all  jobs)
+# global configuration (Usable by all jobs)
 # ══════════════════════════════════════════════════════════════════════════════
 env:
-  NODE_VERSION: '20'
+  APP_NAME: chess_exercises_notes
+  APP_DISPLAY_NAME: Chess Exercises Notes
+  APP_ID: com.loloof64.chess_exercises_notes
 
 # ══════════════════════════════════════════════════════════════════════════════
-# JOBS (work units)
+# JOBS
 # ══════════════════════════════════════════════════════════════════════════════
 jobs:
-  build-and-release:
+  # ────────────────────────────────────────────────────────────────
+  # Resolve the current tag on the branch
+  # ────────────────────────────────────────────────────────────────
+  prepare:
+    runs-on: ubuntu-22.04
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get current tag
+        id: tag
+        run: |
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+  # ────────────────────────────────────────────────────────────────
+  # Android – APK & AAB
+  # ────────────────────────────────────────────────────────────────
+  build-android:
+    needs: prepare
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
       - uses: subosito/flutter-action@v2
-      - name: Install Fastforge
-        run: dart pub global activate fastforge
-      - name: Build and release
-        run: fastforge release --name production
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - run: flutter build appbundle --release
+      - name: Rename artifacts
+        run: |
+          TAG="${{ needs.prepare.outputs.tag }}"
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             "${APP_NAME}-${TAG}.apk"
+          cp build/app/outputs/bundle/release/app-release.aab \
+             "${APP_NAME}-${TAG}.aab"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: |
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.apk
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.aab
+
+  # ────────────────────────────────────────────────────────────────
+  # Linux – AppImage, DEB, RPM
+  # ────────────────────────────────────────────────────────────────
+  build-linux:
+    needs: prepare
+    runs-on: ubuntu-22.04
+    env:
+      TAG: ${{ needs.prepare.outputs.tag }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            rpm patchelf libfuse2
+      - run: flutter pub get
+      - run: flutter build linux --release
+
+      # ── DEB ──────────────────────────────────────────────────────
+      - name: Package DEB
+        run: |
+          PKG=deb_pkg
+          mkdir -p "$PKG/DEBIAN"
+          mkdir -p "$PKG/usr/lib/$APP_NAME"
+          mkdir -p "$PKG/usr/bin"
+          mkdir -p "$PKG/usr/share/applications"
+          mkdir -p "$PKG/usr/share/pixmaps"
+
+          cp -r build/linux/x64/release/bundle/* "$PKG/usr/lib/$APP_NAME/"
+
+          cat > "$PKG/usr/bin/$APP_NAME" << 'LAUNCHER'
+          #!/bin/sh
+          exec /usr/lib/chess_exercises_notes/chess_exercises_notes "$@"
+          LAUNCHER
+          chmod 755 "$PKG/usr/bin/$APP_NAME"
+
+          cat > "$PKG/usr/share/applications/$APP_NAME.desktop" << DESKTOP
+          [Desktop Entry]
+          Name=${APP_DISPLAY_NAME}
+          Exec=${APP_NAME}
+          Icon=${APP_NAME}
+          Type=Application
+          Categories=Game;Education;
+          DESKTOP
+
+          [ -f assets/images/logo.png ] && \
+            cp assets/images/logo.png "$PKG/usr/share/pixmaps/$APP_NAME.png"
+
+          cat > "$PKG/DEBIAN/control" << CTRL
+          Package: chess-exercises-notes
+          Version: ${VERSION}
+          Section: games
+          Priority: optional
+          Architecture: amd64
+          Depends: libgtk-3-0
+          Maintainer: loloof64
+          Description: Synchronize your chess exercises books answers across your devices.
+          CTRL
+
+          dpkg-deb --build "$PKG" "${APP_NAME}-${TAG}.deb"
+
+      # ── RPM ──────────────────────────────────────────────────────
+      - name: Package RPM
+        run: |
+          TOP="$(pwd)/rpmbuild"
+          mkdir -p "$TOP"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+          STAGED="$TOP/BUILD/staged"
+          mkdir -p "$STAGED/usr/lib/$APP_NAME"
+          mkdir -p "$STAGED/usr/bin"
+          mkdir -p "$STAGED/usr/share/applications"
+
+          cp -r build/linux/x64/release/bundle/* "$STAGED/usr/lib/$APP_NAME/"
+
+          cat > "$STAGED/usr/bin/$APP_NAME" << 'LAUNCHER'
+          #!/bin/sh
+          exec /usr/lib/chess_exercises_notes/chess_exercises_notes "$@"
+          LAUNCHER
+          chmod 755 "$STAGED/usr/bin/$APP_NAME"
+
+          cat > "$STAGED/usr/share/applications/$APP_NAME.desktop" << DESKTOP
+          [Desktop Entry]
+          Name=${APP_DISPLAY_NAME}
+          Exec=${APP_NAME}
+          Icon=${APP_NAME}
+          Type=Application
+          Categories=Game;Education;
+          DESKTOP
+
+          cat > "$TOP/SPECS/$APP_NAME.spec" << SPEC
+          Name:           chess-exercises-notes
+          Version:        ${VERSION}
+          Release:        1
+          Summary:        ${APP_DISPLAY_NAME}
+          License:        MIT
+          AutoReqProv:    no
+
+          %description
+          Synchronize your chess exercises books answers across your devices.
+
+          %install
+          cp -a ${STAGED}/* %{buildroot}/
+
+          %files
+          /usr/lib/${APP_NAME}/
+          /usr/bin/${APP_NAME}
+          /usr/share/applications/${APP_NAME}.desktop
+          SPEC
+
+          rpmbuild --define "_topdir $TOP" -bb "$TOP/SPECS/$APP_NAME.spec"
+          cp "$TOP/RPMS/x86_64/"*.rpm "${APP_NAME}-${TAG}.rpm"
+
+      # ── AppImage ─────────────────────────────────────────────────
+      - name: Package AppImage
+        run: |
+          APP_DIR=AppDir
+          mkdir -p "$APP_DIR/usr/bin"
+          mkdir -p "$APP_DIR/usr/share/applications"
+          mkdir -p "$APP_DIR/usr/share/icons/hicolor/256x256/apps"
+
+          cp -r build/linux/x64/release/bundle/* "$APP_DIR/usr/bin/"
+
+          cat > "$APP_DIR/$APP_NAME.desktop" << DESKTOP
+          [Desktop Entry]
+          Name=${APP_DISPLAY_NAME}
+          Exec=${APP_NAME}
+          Icon=${APP_NAME}
+          Type=Application
+          Categories=Game;Education;
+          DESKTOP
+          cp "$APP_DIR/$APP_NAME.desktop" "$APP_DIR/usr/share/applications/"
+
+          if [ -f assets/images/logo.png ]; then
+            cp assets/images/logo.png "$APP_DIR/$APP_NAME.png"
+            cp assets/images/logo.png \
+               "$APP_DIR/usr/share/icons/hicolor/256x256/apps/$APP_NAME.png"
+          else
+            touch "$APP_DIR/$APP_NAME.png"
+          fi
+
+          cat > "$APP_DIR/AppRun" << 'APPRUN'
+          #!/bin/sh
+          SELF=$(readlink -f "$0")
+          HERE=${SELF%/*}
+          export LD_LIBRARY_PATH="$HERE/usr/bin/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          exec "$HERE/usr/bin/chess_exercises_notes" "$@"
+          APPRUN
+          chmod +x "$APP_DIR/AppRun"
+
+          wget -q "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" \
+               -O appimagetool
+          chmod +x appimagetool
+          ./appimagetool --appimage-extract-and-run "$APP_DIR" "${APP_NAME}-${TAG}.AppImage"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            ${{ env.APP_NAME }}-${{ env.TAG }}.deb
+            ${{ env.APP_NAME }}-${{ env.TAG }}.rpm
+            ${{ env.APP_NAME }}-${{ env.TAG }}.AppImage
+
+  # ────────────────────────────────────────────────────────────────
+  # Windows – EXE, MSIX, ZIP
+  # ────────────────────────────────────────────────────────────────
+  build-windows:
+    needs: prepare
+    runs-on: windows-latest
+    env:
+      TAG: ${{ needs.prepare.outputs.tag }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter build windows --release
+
+      - name: Create ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path "build\windows\x64\runner\Release\*" `
+            -DestinationPath "${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.zip"
+
+      - name: Copy EXE
+        shell: pwsh
+        run: |
+          Copy-Item "build\windows\x64\runner\Release\${{ env.APP_NAME }}.exe" `
+            "${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.exe"
+
+      - name: Build MSIX
+        shell: pwsh
+        run: |
+          dart pub global activate msix
+          $msixConfig = @"
+
+          msix_config:
+            display_name: ${{ env.APP_DISPLAY_NAME }}
+            publisher_display_name: loloof64
+            identity_name: ${{ env.APP_ID }}
+            msix_version: ${{ needs.prepare.outputs.version }}.0
+            output_name: ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}
+            output_path: .
+          "@
+          Add-Content -Path pubspec.yaml -Value $msixConfig
+          dart run msix:create
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.zip
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.exe
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.msix
+
+  # ────────────────────────────────────────────────────────────────
+  # Publish GitHub Release
+  # ────────────────────────────────────────────────────────────────
+  release:
+    needs: [prepare, build-android, build-linux, build-windows]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Read release message
+        id: message
+        run: |
+          if [ -f release_message.md ]; then
+            {
+              echo "body<<__RELEASE_BODY_EOF__"
+              cat release_message.md
+              echo "__RELEASE_BODY_EOF__"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "body=Release ${{ needs.prepare.outputs.tag }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: "Release ${{ needs.prepare.outputs.tag }}"
+          body: ${{ steps.message.outputs.body }}
+          files: |
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.apk
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.aab
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.deb
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.rpm
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.AppImage
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.zip
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.exe
+            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.msix
