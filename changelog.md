@@ -1,3 +1,8 @@
+# v0.1.4
+
+- fix windows MSIX building by correcting the application identity name
+- force NodeJS to version 24
+
 # v0.1.3
 
 Add missing
