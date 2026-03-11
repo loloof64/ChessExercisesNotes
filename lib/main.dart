@@ -39,8 +39,19 @@ void main() async {
   runApp(ProviderScope(child: home));
 }
 
-class AppMobile extends StatelessWidget {
+class AppMobile extends StatefulWidget {
   const AppMobile({super.key});
+
+  @override
+  State<AppMobile> createState() => _AppMobileState();
+}
+
+class _AppMobileState extends State<AppMobile> {
+  @override
+  void initState() {
+    super.initState();
+    FlutterNativeSplash.remove();
+  }
 
   @override
   Widget build(BuildContext context) => MainApp();

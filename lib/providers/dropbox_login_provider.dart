@@ -13,7 +13,6 @@ class DropboxLogin extends _$DropboxLogin {
   @override
   Future<AccessTokenResponse?> build() async {
     final client = DropboxOAuth2Client();
-
     _helper = OAuth2Helper(
       client,
       clientId: "oja5n3i5ibq4mdp",

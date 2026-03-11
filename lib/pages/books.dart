@@ -10,7 +10,6 @@ import 'package:chess_exercises_notes/pages/widgets/grid_item.dart';
 import 'package:chess_exercises_notes/utils/filesystem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -39,7 +38,6 @@ class _BooksPageWidgetState extends ConsumerState<BooksPageWidget> {
   @override
   void initState() {
     super.initState();
-    FlutterNativeSplash.remove();
     _refreshFolderItems().then((value) {});
   }
 
