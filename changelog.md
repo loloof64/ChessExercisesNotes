@@ -1,3 +1,7 @@
+# v0.1.5
+
+- force NodeJS to version 24 in "prepare" workflow step
+
 # v0.1.4
 
 - fix windows MSIX building by correcting the application identity name
