@@ -1,3 +1,7 @@
+# v0.1.2
+
+Fix github workflow (attempt 2)
+
 # v0.1.1
 
 Fix github workflow
