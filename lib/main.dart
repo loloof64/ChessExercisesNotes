@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chess_exercises_notes/pages/books.dart';
 import 'package:chess_exercises_notes/providers/dark_theme_provider.dart';
+import 'package:chess_exercises_notes/providers/dropbox_login_provider.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
 import 'package:flutter_i18n/loaders/decoders/yaml_decode_strategy.dart';
@@ -87,6 +88,10 @@ class MainApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final inDarkMode = ref.watch(darkThemeProvider);
+    // Eagerly initialize the Dropbox login provider so that silent restore
+    // (and the subsequent auto-sync) runs at app startup, not only when the
+    // drawer is first opened.
+    ref.read(dropboxLoginProvider);
     return MaterialApp(
       title: "Chess exercises notes",
       theme: FlexThemeData.light(scheme: FlexScheme.greenM3),
