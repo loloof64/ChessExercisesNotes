@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:chess_exercises_notes/utils/dropbox_cursor_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// Simple service wrapper around Dropbox REST API
@@ -148,11 +149,17 @@ class DropboxApiService {
     );
 
     if (response.statusCode == 409) {
-      // path/not_found — folder doesn't exist yet on Dropbox
+      // path/not_found — folder doesn't exist yet on Dropbox (or was deleted)
+      debugPrint(
+        'Dropbox list_folder: /books not found (409) — remote folder missing.',
+      );
       return {"entries": [], "has_more": false};
     }
 
     if (response.statusCode != 200) {
+      debugPrint(
+        'Dropbox list_folder error: status=${response.statusCode} body=${response.body}',
+      );
       throw Exception("Dropbox list_folder error: ${response.body}");
     }
 

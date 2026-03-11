@@ -85,7 +85,49 @@ class SyncEngine {
       '${_previousManifest.length} manifest entries.',
     );
 
-    final actions = _computeActions(localFiles, remoteFiles);
+    // --- Asymmetry safety guards (must run before _computeActions) ---
+
+    // Guard 1: local scan empty but remote has files + non-empty manifest.
+    // This is how the original mass-remote-deletion happened: local dir
+    // wasn't found → all remote files flagged as "deleted locally" → deleteRemote.
+    // Abort immediately instead of risking data loss.
+    if (localFiles.isEmpty &&
+        remoteFiles.isNotEmpty &&
+        _previousManifest.isNotEmpty) {
+      debugPrint(
+        'Sync ABORTED (safety): local scan returned 0 entries but remote has '
+        '${remoteFiles.length} entries and manifest has '
+        '${_previousManifest.length} entries. '
+        'This would delete all remote files — aborting.',
+      );
+      throw Exception(
+        'Sync safety: local scan returned 0 entries unexpectedly. '
+        'Aborting to prevent remote data loss.',
+      );
+    }
+
+    // Guard 2: remote scan empty but local has files + non-empty manifest.
+    // Means the remote /books folder was deleted (e.g. by a previous bad sync).
+    // Recover by treating this as a first-sync so all local files get uploaded
+    // and nothing is deleted locally.
+    final remoteRootDeleted =
+        remoteFiles.isEmpty &&
+        localFiles.isNotEmpty &&
+        _previousManifest.isNotEmpty;
+    if (remoteRootDeleted) {
+      debugPrint(
+        'Sync: remote /books folder appears deleted '
+        '(0 remote entries, ${_previousManifest.length} manifest entries, '
+        '${localFiles.length} local entries). '
+        'Recovering: treating as first-sync and uploading all local files.',
+      );
+    }
+
+    final actions = _computeActions(
+      localFiles,
+      remoteFiles,
+      forceFirstSync: remoteRootDeleted,
+    );
 
     if (actions.isEmpty) {
       debugPrint('Sync: nothing to do — local and remote are identical.');
@@ -186,11 +228,14 @@ class SyncEngine {
 
   List<_SyncAction> _computeActions(
     Map<String, _LocalFileInfo> local,
-    Map<String, _RemoteFileInfo> remote,
-  ) {
+    Map<String, _RemoteFileInfo> remote, {
+    bool forceFirstSync = false,
+  }) {
     final actions = <_SyncAction>[];
     final allPaths = {...local.keys, ...remote.keys, ..._previousManifest};
-    final isFirstSync = _previousManifest.isEmpty;
+    // forceFirstSync is set when remote appears to have been deleted;
+    // we want to upload all local files without planning any deletions.
+    final isFirstSync = _previousManifest.isEmpty || forceFirstSync;
 
     for (final path in allPaths) {
       final l = local[path];

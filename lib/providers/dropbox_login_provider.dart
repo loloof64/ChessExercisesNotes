@@ -9,6 +9,7 @@ import 'package:oauth2_client/access_token_response.dart';
 import 'package:oauth2_client/oauth2_helper.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:http/http.dart' as http;
+import 'package:chess_exercises_notes/providers/sync_provider.dart';
 
 part 'dropbox_login_provider.g.dart';
 
@@ -61,6 +62,14 @@ class DropboxLogin extends _$DropboxLogin {
     try {
       final access = token?.accessToken;
       if (access != null) await _fetchAndSetAccount(access);
+      // trigger a sync after interactive login
+      if (access != null) {
+        try {
+          await ref.read(syncProvider.notifier).sync();
+        } catch (e) {
+          debugPrint('Background sync after interactive login failed: $e');
+        }
+      }
     } catch (e) {
       debugPrint('Failed to fetch Dropbox account after login: $e');
     }
@@ -168,6 +177,18 @@ class DropboxLogin extends _$DropboxLogin {
       if (!success) {
         await _clearStoredTokens();
         state = const AsyncValue.data(null);
+      }
+
+      // If silent restore succeeded, start a non-blocking background sync.
+      // We intentionally do not await this so app startup isn't delayed.
+      // The sync provider/engine already has safety guards (manifest,
+      // deletion thresholds) to avoid destructive operations on first-run.
+      if (success) {
+        ref.read(syncProvider.notifier).sync().then((_) {
+          debugPrint('Background sync after silent restore completed');
+        }).catchError((e) {
+          debugPrint('Background sync after silent restore failed: $e');
+        });
       }
     } catch (e) {
       debugPrint('Silent session restore failed: $e');
