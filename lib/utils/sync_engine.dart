@@ -152,6 +152,18 @@ class SyncEngine {
     // Parent dir is the appSupportDir; relative paths start with "books/..."
     final baseDir = _localBooksDir.parent;
 
+    // Include the books root dir itself. Dropbox list_folder('/books') returns
+    // '/books' as one of the entries (tag=folder), but Dart's Directory.list()
+    // only returns the *contents*, not the directory itself. Without this entry
+    // the engine sees books as "present remote, absent local" → deleteRemote.
+    final rootRelative = p
+        .relative(_localBooksDir.path, from: baseDir.path)
+        .replaceAll('\\', '/');
+    map[rootRelative.toLowerCase()] = _LocalFileInfo(
+      isFolder: true,
+      originalRelativePath: rootRelative,
+    );
+
     await for (final entity in _localBooksDir.list(recursive: true)) {
       final originalRelative = p
           .relative(entity.path, from: baseDir.path)
@@ -237,7 +249,14 @@ class SyncEngine {
     // we want to upload all local files without planning any deletions.
     final isFirstSync = _previousManifest.isEmpty || forceFirstSync;
 
+    // The sync root folder ('books') must never be deleted — it is the anchor
+    // of the whole sync tree. Deleting it would remove all content from Dropbox.
+    const _syncRoot = 'books';
+
     for (final path in allPaths) {
+      // Belt-and-suspenders: never plan a deletion of the sync root itself.
+      if (path == _syncRoot) continue;
+
       final l = local[path];
       final r = remote[path];
       final wasInManifest = _previousManifest.contains(path);
