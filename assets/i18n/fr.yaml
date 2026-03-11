@@ -60,9 +60,12 @@ options:
   dropbox:
     login_button: "Se connecter à Dropbox"
     logout_button: "Se déconnecter de Dropbox"
+    sync_button: "Synchroniser les fichiers"
   snack_messages:
     dropbox:
       connection_success: "Connecté à votre compte Dropbox."
       connection_error: "Échec de la connexion à votre compte Dropbox. Veuillez réessayer"
       disconnection_success: "Déconnecté de votre compte Dropbox."
       disconnection_error: "Échec de la déconnexion de votre compte Dropbox."
+      sync_success: "Fichiers synchronisés avec succès."
+      sync_error: "Échec de la synchronisation des fichiers."

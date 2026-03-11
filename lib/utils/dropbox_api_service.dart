@@ -110,4 +110,90 @@ class DropboxApiService {
 
     return response.bodyBytes;
   }
+
+  /// List all files without using the stored cursor (full scan for sync).
+  /// Does not include deleted entries.
+  Future<List<dynamic>> listAllFilesForSync(String path) async {
+    final entries = <dynamic>[];
+
+    final response = await _listFolderForSync(path);
+    entries.addAll(response["entries"] as List? ?? []);
+
+    var cursor = response["cursor"] as String?;
+    var hasMore = response["has_more"] as bool? ?? false;
+
+    while (hasMore && cursor != null) {
+      final cont = await _listFolderContinue(cursor);
+      entries.addAll(cont["entries"] as List? ?? []);
+      cursor = cont["cursor"] as String?;
+      hasMore = cont["has_more"] as bool? ?? false;
+    }
+
+    return entries;
+  }
+
+  Future<Map<String, dynamic>> _listFolderForSync(String path) async {
+    final response = await http.post(
+      Uri.parse("https://api.dropboxapi.com/2/files/list_folder"),
+      headers: {
+        "Authorization": "Bearer $accessToken",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "path": path,
+        "recursive": true,
+        "include_deleted": false,
+        "include_non_downloadable_files": false,
+      }),
+    );
+
+    if (response.statusCode == 409) {
+      // path/not_found — folder doesn't exist yet on Dropbox
+      return {"entries": [], "has_more": false};
+    }
+
+    if (response.statusCode != 200) {
+      throw Exception("Dropbox list_folder error: ${response.body}");
+    }
+
+    return jsonDecode(response.body);
+  }
+
+  /// Create a folder on Dropbox. Ignores "already exists" errors.
+  Future<void> createFolder(String dropboxPath) async {
+    final response = await http.post(
+      Uri.parse("https://api.dropboxapi.com/2/files/create_folder_v2"),
+      headers: {
+        "Authorization": "Bearer $accessToken",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({"path": dropboxPath, "autorename": false}),
+    );
+
+    if (response.statusCode == 200) return;
+
+    // 409 with path/conflict means folder already exists — that's fine
+    if (response.statusCode == 409) return;
+
+    throw Exception("Dropbox create_folder error: ${response.body}");
+  }
+
+  /// Delete a file or folder on Dropbox.
+  Future<void> deletePath(String dropboxPath) async {
+    final response = await http.post(
+      Uri.parse("https://api.dropboxapi.com/2/files/delete_v2"),
+      headers: {
+        "Authorization": "Bearer $accessToken",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({"path": dropboxPath}),
+    );
+
+    if (response.statusCode == 200) return;
+
+    // 409 path_lookup/not_found — already deleted, that's fine
+    if (response.statusCode == 409) return;
+
+    throw Exception("Dropbox delete error: ${response.body}");
+  }
 }

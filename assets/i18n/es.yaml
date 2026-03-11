@@ -60,9 +60,12 @@ options:
   dropbox:
     login_button: "Iniciar sesión en Dropbox"
     logout_button: "Cerrar sesión de Dropbox"
+    sync_button: "Sincronizar archivos"
   snack_messages:
     dropbox:
       connection_success: "Conectado a tu cuenta de Dropbox."
       connection_error: "No se pudo iniciar sesión en tu cuenta de Dropbox. Por favor, inténtalo de nuevo."
       disconnection_success: "Se cerró la sesión de tu cuenta de Dropbox."
       disconnection_error: "No se pudo cerrar la sesión de tu cuenta de Dropbox."
+      sync_success: "Archivos sincronizados correctamente."
+      sync_error: "Error al sincronizar los archivos."

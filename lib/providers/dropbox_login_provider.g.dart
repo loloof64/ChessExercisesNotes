@@ -33,7 +33,7 @@ final class DropboxLoginProvider
   DropboxLogin create() => DropboxLogin();
 }
 
-String _$dropboxLoginHash() => r'a67b58b4f1134479b702854dce582cfaf2b44aae';
+String _$dropboxLoginHash() => r'14cac3b494a566ec62bd62939bab778925d9c312';
 
 abstract class _$DropboxLogin extends $AsyncNotifier<AccessTokenResponse?> {
   FutureOr<AccessTokenResponse?> build();

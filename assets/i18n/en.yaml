@@ -60,9 +60,12 @@ options:
   dropbox:
     login_button: "Login Dropbox"
     logout_button: "Logout Dropbox"
+    sync_button: "Sync files"
   snack_messages:
     dropbox:
       connection_success: "Logged in your Dropbox account."
       connection_error: "Failed to log in your Dropbox account : please retry."
       disconnection_success: "Logged out your Dropbox account."
       disconnection_error: "Failed to log out your Dropbox account."
+      sync_success: "Files synchronized successfully."
+      sync_error: "File synchronization failed."
