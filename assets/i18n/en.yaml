@@ -63,6 +63,6 @@ options:
   snack_messages:
     dropbox:
       connection_success: "Logged in your Dropbox account."
-      connection_error: "Failed to log in your Dropbox account."
+      connection_error: "Failed to log in your Dropbox account : please retry."
       disconnection_success: "Logged out your Dropbox account."
       disconnection_error: "Failed to log out your Dropbox account."

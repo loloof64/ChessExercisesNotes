@@ -19,51 +19,152 @@ class CommonDrawer extends ConsumerStatefulWidget {
 class _ConsumerDrawerState extends ConsumerState<CommonDrawer> {
   bool _isLoggedIn = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkLogged();
+  }
+
+  Future<void> _checkLogged() async {
+    final tokenState = ref.read(dropboxLoginProvider);
+    final token = tokenState.asData?.value;
+    final logged = token?.accessToken != null;
+    if (!mounted) return;
+    setState(() => _isLoggedIn = logged);
+  }
+
   Future<void> _loginDropbox() async {
     final dropboxAccount = ref.read(dropboxAccountProvider.notifier);
     final dropboxLogin = ref.read(dropboxLoginProvider.notifier);
     if (_isLoggedIn) return;
 
     try {
-      final accessToken = await dropboxLogin.getAccessToken();
+      final tokenResponse = await dropboxLogin.login(); // interactive login
+      final accessToken = tokenResponse?.accessToken;
 
-      if (accessToken != null) {
-        final response = await http.post(
-          Uri.parse("https://api.dropboxapi.com/2/users/get_current_account"),
-          headers: {"Authorization": "Bearer $accessToken"},
-        );
-
-        final data = jsonDecode(response.body);
-
-        final email = data["email"];
-        final accountId = data["account_id"];
-        final profilePhotoUrl = data["profile_photo_url"];
-        final displayName = data["name"]["display_name"];
-
-        dropboxAccount.setAccount(
-          DropboxAccount(
-            displayName: displayName,
-            email: email,
-            accountId: accountId,
-            profilePhotoUrl: profilePhotoUrl,
-          ),
-        );
-
-        setState(() {
-          _isLoggedIn = true;
-        });
-
+      if (accessToken == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: I18nText(
-              "options.snack_messages.dropbox.connection_success",
+              "options.snack_messages.dropbox.connection_error",
             ),
           ),
         );
+        return;
       }
-    } catch (e) {
-      debugPrint("Error while login Dropbox account : $e");
+
+      final response = await http.post(
+        Uri.parse("https://api.dropboxapi.com/2/users/get_current_account"),
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      // Handle invalid token: revoke local tokens and ask user to re-login
+      if (response.statusCode == 401) {
+        debugPrint(
+          'Dropbox API returned 401 — token invalid. Revoking local tokens.',
+        );
+        await dropboxLogin.logout();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: I18nText(
+              "options.snack_messages.dropbox.connection_error",
+            ),
+          ),
+        );
+        return;
+      }
+
+      if (response.statusCode != 200) {
+        debugPrint(
+          "Dropbox get_current_account failed: ${response.statusCode} ${response.body}",
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: I18nText(
+              "options.snack_messages.dropbox.connection_error",
+            ),
+          ),
+        );
+        return;
+      }
+
+      final Map<String, dynamic>? data = (response.body.isNotEmpty)
+          ? jsonDecode(response.body) as Map<String, dynamic>?
+          : null;
+
+      if (data == null) {
+        debugPrint(
+          "Dropbox get_current_account returned empty or invalid JSON: ${response.body}",
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: I18nText(
+              "options.snack_messages.dropbox.connection_error",
+            ),
+          ),
+        );
+        return;
+      }
+
+      final accountId = data['account_id'] as String?;
+      if (accountId == null || accountId.isEmpty) {
+        debugPrint("Dropbox response missing account_id: ${response.body}");
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: I18nText(
+              "options.snack_messages.dropbox.connection_error",
+            ),
+          ),
+        );
+        return;
+      }
+
+      final email = data['email'] as String?;
+      if (email == null || email.isEmpty) {
+        debugPrint("Dropbox response missing email: ${response.body}");
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: I18nText(
+              "options.snack_messages.dropbox.connection_error",
+            ),
+          ),
+        );
+        return;
+      }
+
+      final nameObj = data['name'] as Map<String, dynamic>?;
+      final displayName = nameObj != null
+          ? (nameObj['display_name'] as String? ?? email)
+          : email;
+      final profilePhotoUrl = data['profile_photo_url'] as String?;
+
+      dropboxAccount.setAccount(
+        DropboxAccount(
+          displayName: displayName,
+          email: email,
+          accountId: accountId,
+          profilePhotoUrl: profilePhotoUrl,
+        ),
+      );
+
+      setState(() => _isLoggedIn = true);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: I18nText(
+            "options.snack_messages.dropbox.connection_success",
+          ),
+        ),
+      );
+    } catch (e, st) {
+      debugPrint("Error while login Dropbox account : $e\n$st");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

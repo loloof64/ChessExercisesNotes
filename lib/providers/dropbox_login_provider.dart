@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:chess_exercises_notes/models/synchronisation_items/dropbox_oauth2_client.dart';
+import 'package:flutter/material.dart';
 import 'package:oauth2_client/access_token_response.dart';
 import 'package:oauth2_client/oauth2_helper.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -55,8 +58,19 @@ class DropboxLogin extends _$DropboxLogin {
     final token = state.asData?.value;
 
     if (token?.accessToken != null) {
-      await _revokeDropboxToken(token!.accessToken!);
+      try {
+        await _revokeDropboxToken(token!.accessToken!);
+      } catch (e) {
+        // If token is already invalid/revoked on Dropbox, ignore and continue
+        // We still want to remove local tokens and clear state.
+        // Log for diagnostics.
+        // ignore: avoid_print
+        debugPrint('Ignoring error while revoking Dropbox token: $e');
+      }
     }
+
+    // remove tokens stored by oauth2_client to force a fresh interactive flow
+    await _helper.removeAllTokens();
 
     state = const AsyncValue.data(null);
   }
@@ -70,9 +84,25 @@ class DropboxLogin extends _$DropboxLogin {
       headers: {"Authorization": "Bearer $accessToken"},
     );
 
-    if (response.statusCode != 200) {
-      throw Exception("Failed to revoke Dropbox token: ${response.body}");
+    if (response.statusCode == 200) return;
+
+    // If token is invalid at Dropbox side, treat as already revoked and return.
+    if (response.statusCode == 401) {
+      try {
+        final body = jsonDecode(response.body) as Map<String, dynamic>?;
+        final error = body?['error'] as Map<String, dynamic>?;
+        final tag = error?['.tag'] as String?;
+        if (tag == 'invalid_access_token') {
+          debugPrint('Dropbox revoke: token already invalid: ${response.body}');
+          return;
+        }
+      } catch (e) {
+        debugPrint('Failed to parse Dropbox revoke error body: $e');
+        // fallthrough to throw below
+      }
     }
+
+    throw Exception("Failed to revoke Dropbox token: ${response.body}");
   }
 
   /// Returns true if there is a valid access token
