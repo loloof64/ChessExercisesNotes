@@ -2,6 +2,9 @@ import 'dart:convert';
 
 import 'package:chess_exercises_notes/models/synchronisation_items/dropbox_oauth2_client.dart';
 import 'package:flutter/material.dart';
+import 'package:chess_exercises_notes/providers/dropbox_account_notifier.dart';
+import 'package:chess_exercises_notes/models/synchronisation_items/dropbox_account.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:oauth2_client/access_token_response.dart';
 import 'package:oauth2_client/oauth2_helper.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -12,6 +15,13 @@ part 'dropbox_login_provider.g.dart';
 @Riverpod(keepAlive: true)
 class DropboxLogin extends _$DropboxLogin {
   late final OAuth2Helper _helper;
+  // secure storage keys
+  static const _kAccessTokenKey = 'dropbox_access_token';
+  static const _kRefreshTokenKey = 'dropbox_refresh_token';
+  static const _kExpiresAtKey = 'dropbox_token_expires_at';
+
+  static final FlutterSecureStorage _secureStorage =
+      const FlutterSecureStorage();
 
   @override
   Future<AccessTokenResponse?> build() async {
@@ -31,8 +41,11 @@ class DropboxLogin extends _$DropboxLogin {
       webAuthOpts: {'useWebview': false},
     );
 
-    // Do NOT login automatically
-    return null;
+    // Try to silently restore a previous session using stored refresh token.
+    await _tryRestoreSession();
+
+    // Return current token (may be null)
+    return state.asData?.value;
   }
 
   /// Interactive login
@@ -40,6 +53,17 @@ class DropboxLogin extends _$DropboxLogin {
     final token = await _helper.getToken();
 
     state = AsyncValue.data(token);
+
+    // persist tokens for future silent restore
+    await _saveTokensToStorage(token);
+
+    // fetch and populate DropboxAccount for UI
+    try {
+      final access = token?.accessToken;
+      if (access != null) await _fetchAndSetAccount(access);
+    } catch (e) {
+      debugPrint('Failed to fetch Dropbox account after login: $e');
+    }
 
     return token;
   }
@@ -71,6 +95,14 @@ class DropboxLogin extends _$DropboxLogin {
 
     // remove tokens stored by oauth2_client to force a fresh interactive flow
     await _helper.removeAllTokens();
+
+    // also clear our secure storage copy
+    await _clearStoredTokens();
+
+    // clear stored account as well
+    try {
+      ref.read(dropboxAccountProvider.notifier).clear();
+    } catch (_) {}
 
     state = const AsyncValue.data(null);
   }
@@ -115,6 +147,174 @@ class DropboxLogin extends _$DropboxLogin {
       return token?.accessToken != null;
     } catch (_) {
       return false;
+    }
+  }
+
+  // --- Silent restore helpers ---
+  Future<void> _tryRestoreSession() async {
+    try {
+      // indicate loading so UI can show a spinner
+      state = const AsyncValue.loading();
+
+      final refresh = await _secureStorage.read(key: _kRefreshTokenKey);
+      debugPrint('Silent restore: refresh token present=${refresh != null}');
+      if (refresh == null) {
+        // nothing to restore
+        state = const AsyncValue.data(null);
+        return;
+      }
+
+      final success = await _refreshWithRefreshToken(refresh);
+      if (!success) {
+        await _clearStoredTokens();
+        state = const AsyncValue.data(null);
+      }
+    } catch (e) {
+      debugPrint('Silent session restore failed: $e');
+      await _clearStoredTokens();
+      state = const AsyncValue.data(null);
+    }
+  }
+
+  Future<bool> _refreshWithRefreshToken(String refreshToken) async {
+    final uri = Uri.parse('https://api.dropboxapi.com/oauth2/token');
+    final response = await http.post(
+      uri,
+      body: {
+        'grant_type': 'refresh_token',
+        'refresh_token': refreshToken,
+        'client_id': 'oja5n3i5ibq4mdp',
+      },
+    );
+    debugPrint(
+      'Dropbox refresh response status=${response.statusCode} body=${response.body}',
+    );
+    if (response.statusCode != 200) {
+      debugPrint(
+        'Dropbox refresh token request failed: ${response.statusCode}',
+      );
+      return false;
+    }
+
+    final Map<String, dynamic> json = jsonDecode(response.body);
+    final access = json['access_token'] as String?;
+    final refresh = json['refresh_token'] as String?;
+    final expiresIn = (json['expires_in'] as num?)?.toInt();
+
+    debugPrint(
+      'Parsed refresh response: access_present=${access != null} refresh_present=${refresh != null} expiresIn=$expiresIn',
+    );
+
+    if (access == null) return false;
+
+    final tokenMap = <String, dynamic>{'access_token': access};
+    if (refresh != null) tokenMap['refresh_token'] = refresh;
+    if (expiresIn != null) tokenMap['expires_in'] = expiresIn;
+    debugPrint('Constructed tokenMap for AccessTokenResponse: $tokenMap');
+
+    try {
+      final tokenResp = AccessTokenResponse.fromMap(tokenMap);
+      debugPrint(
+        'AccessTokenResponse created: access=${tokenResp.accessToken} refresh=${tokenResp.refreshToken} expiresIn=${tokenResp.expiresIn}',
+      );
+      state = AsyncValue.data(tokenResp);
+      await _saveTokensToStorage(tokenResp);
+
+      // populate DropboxAccount for UI
+      final access = tokenResp.accessToken;
+      if (access != null) {
+        try {
+          await _fetchAndSetAccount(access);
+        } catch (e) {
+          debugPrint(
+            'Failed to fetch Dropbox account during silent restore: $e',
+          );
+        }
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint('Failed to construct AccessTokenResponse from refresh: $e');
+      return false;
+    }
+  }
+
+  Future<void> _saveTokensToStorage(AccessTokenResponse? token) async {
+    if (token == null) return;
+    if (token.accessToken != null) {
+      await _secureStorage.write(
+        key: _kAccessTokenKey,
+        value: token.accessToken,
+      );
+    }
+    if (token.refreshToken != null) {
+      await _secureStorage.write(
+        key: _kRefreshTokenKey,
+        value: token.refreshToken,
+      );
+    }
+    if (token.expiresIn != null) {
+      final expiresAt = DateTime.now()
+          .toUtc()
+          .add(Duration(seconds: token.expiresIn!))
+          .toIso8601String();
+      await _secureStorage.write(key: _kExpiresAtKey, value: expiresAt);
+    }
+  }
+
+  Future<void> _clearStoredTokens() async {
+    await _secureStorage.delete(key: _kAccessTokenKey);
+    await _secureStorage.delete(key: _kRefreshTokenKey);
+    await _secureStorage.delete(key: _kExpiresAtKey);
+  }
+
+  Future<void> _fetchAndSetAccount(String accessToken) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.dropboxapi.com/2/users/get_current_account'),
+        headers: {'Authorization': 'Bearer $accessToken'},
+      );
+
+      debugPrint(
+        'get_current_account response status=${response.statusCode} body=${response.body}',
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint(
+          'Failed to fetch Dropbox account: ${response.statusCode} ${response.body}',
+        );
+        return;
+      }
+
+      final Map<String, dynamic>? data = response.body.isNotEmpty
+          ? jsonDecode(response.body) as Map<String, dynamic>?
+          : null;
+
+      if (data == null) return;
+
+      final accountId = data['account_id'] as String?;
+      if (accountId == null) return;
+
+      final email = data['email'] as String?;
+      final nameObj = data['name'] as Map<String, dynamic>?;
+      final displayName = nameObj != null
+          ? (nameObj['display_name'] as String? ?? email ?? 'Dropbox user')
+          : (email ?? 'Dropbox user');
+      final profilePhotoUrl = data['profile_photo_url'] as String?;
+
+      final account = DropboxAccount(
+        displayName: displayName,
+        email: email ?? 'Dropbox user',
+        accountId: accountId,
+        profilePhotoUrl: profilePhotoUrl,
+      );
+
+      debugPrint(
+        'Setting DropboxAccount displayName=${account.displayName} email=${account.email} accountId=${account.accountId}',
+      );
+      ref.read(dropboxAccountProvider.notifier).setAccount(account);
+    } catch (e) {
+      debugPrint('Error while fetching Dropbox account: $e');
     }
   }
 }

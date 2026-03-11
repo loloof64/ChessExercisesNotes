@@ -18,6 +18,7 @@ class CommonDrawer extends ConsumerStatefulWidget {
 
 class _ConsumerDrawerState extends ConsumerState<CommonDrawer> {
   bool _isLoggedIn = false;
+  bool _isRestoring = false;
 
   @override
   void initState() {
@@ -210,9 +211,21 @@ class _ConsumerDrawerState extends ConsumerState<CommonDrawer> {
   Widget build(BuildContext context) {
     final inDarkMode = ref.watch(darkThemeProvider);
     final darkModeNotifier = ref.read(darkThemeProvider.notifier);
-    final dropboxAccountNotifier = ref.watch(dropboxAccountProvider.notifier);
+    final dropboxAccount = ref.watch(dropboxAccountProvider);
 
-    final dropboxAccount = dropboxAccountNotifier.getAccount();
+    final loginState = ref.watch(dropboxLoginProvider);
+    final token = loginState.asData?.value;
+    final logged = token?.accessToken != null;
+    final restoring = loginState.isLoading;
+
+    // update local logged state for button logic (don't trigger interactive flows)
+    if (_isLoggedIn != logged || _isRestoring != restoring) {
+      if (mounted) {
+        _isLoggedIn = logged;
+        _isRestoring = restoring;
+      }
+    }
+
     final accountUserName = dropboxAccount?.displayName;
     final accountAvatarUrl = dropboxAccount?.profilePhotoUrl;
 
@@ -237,24 +250,37 @@ class _ConsumerDrawerState extends ConsumerState<CommonDrawer> {
               ),
             ],
           ),
-          if (_isLoggedIn)
-            ElevatedButton(
-              onPressed: _logoutDropbox,
-              child: I18nText("options.dropbox.logout_button"),
-            ),
-          if (accountUserName != null) Text(accountUserName),
-          if (accountAvatarUrl != null)
-            Image.network(
-              accountAvatarUrl,
-              width: 50.0,
-              height: 50.0,
-              fit: BoxFit.cover,
-            ),
-          if (!_isLoggedIn)
-            ElevatedButton(
-              onPressed: _loginDropbox,
-              child: I18nText("options.dropbox.login_button"),
-            ),
+          if (_isRestoring)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: SizedBox(
+                width: 50,
+                height: 50,
+                child: const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+              ),
+            )
+          else ...[
+            if (!_isLoggedIn)
+              ElevatedButton(
+                onPressed: _loginDropbox,
+                child: I18nText("options.dropbox.login_button"),
+              ),
+            if (_isLoggedIn)
+              ElevatedButton(
+                onPressed: _logoutDropbox,
+                child: I18nText("options.dropbox.logout_button"),
+              ),
+            if (accountUserName != null) Text(accountUserName),
+            if (accountAvatarUrl != null)
+              Image.network(
+                accountAvatarUrl,
+                width: 50.0,
+                height: 50.0,
+                fit: BoxFit.cover,
+              ),
+          ],
         ],
       ),
     );
