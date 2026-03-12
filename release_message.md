@@ -1,3 +1,4 @@
 # Release
 
-- fix Windows MSIX build (incorrect flag msix-version)
+- remove zip artifact
+- fix in workflow : forces the use of NodeJS 24

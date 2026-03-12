@@ -1,3 +1,7 @@
+# v0.1.8
+
+- fix in workflow : forces the use of NodeJS 24
+
 # v0.1.7
 
 - fix Windows MSIX build (incorrect flag msix-version)
