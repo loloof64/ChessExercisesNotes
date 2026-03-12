@@ -1,6 +1,7 @@
 # v0.1.8
 
 - fix in workflow : forces the use of NodeJS 24
+- fix windows zip and exe artifacts : add missing DLL files
 
 # v0.1.7
 
