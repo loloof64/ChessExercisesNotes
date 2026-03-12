@@ -1,6 +1,11 @@
+# v0.1.6
+
+- change the flutter builder package in workflows
+- fix Windows MSIX build
+
 # v0.1.5
 
-- force NodeJS to version 24 in "prepare" workflow step
+- fix windows NSIX build by removing interactive prompt from NSIX builder package
 
 # v0.1.4
 

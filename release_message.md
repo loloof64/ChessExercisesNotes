@@ -1,3 +1,4 @@
 # Release
 
-- force NodeJS to version 24 in "prepare" workflow step
+- change the flutter builder package in workflows
+- fix Windows MSIX build
