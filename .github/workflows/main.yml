@@ -224,12 +224,15 @@ jobs:
           # ── Bundle system shared libraries needed at runtime ──
           # Collect shared-lib deps of the main binary + Flutter plugin
           # .so files, then do two extra passes for transitive deps.
-          # glibc / ld / libgcc / libstdc++ are excluded, plus ALL EGL/GL/Mesa/Vulkan
-          # graphics libs so Flutter always uses the host system's own driver stack.
-          # This avoids "No provider of eglGetPlatformDisplayEXT found" on Fedora/NVIDIA
-          # (libGLESv2 and libvulkan are included to prevent Ubuntu stubs from shadowing
-          # the host Mesa when running under a Wayland compositor).
-          EXCLUDE_RE="^(libc\.so|libm\.so|libdl\.so|librt\.so|libpthread\.so|ld-linux-x86-64\.so|libstdc\+\+\.so|libgcc_s\.so|libEGL\.so|libGL\.so|libGLX\.so|libGLdispatch\.so|libGLESv2\.so|libvulkan\.so|libdrm\.so|libgbm\.so|libxcb-dri)"
+          # glibc / ld / libgcc / libstdc++ are excluded, plus GPU driver-level
+          # graphics libs (EGL, GL, Mesa, Vulkan, DRM, GBM) so Flutter always uses
+          # the host system's own driver stack.
+          # libepoxy IS bundled: it resolves EGL/GL functions via dlopen() at runtime.
+          # Since libEGL/libGL are NOT bundled, libepoxy's dlopen("libEGL.so.1")
+          # falls through to the host's real driver, which has the proper platform
+          # extensions.  This avoids "No provider of eglGetPlatformDisplayEXT" on
+          # Fedora/NVIDIA while keeping the AppImage self-contained.
+          EXCLUDE_RE="^(libc\.so|libm\.so|libdl\.so|librt\.so|libpthread\.so|ld-linux-x86-64\.so|libstdc\+\+\.so|libgcc_s\.so|libEGL\.so|libGL\.so|libGLX\.so|libGLdispatch\.so|libGLESv2\.so|libOpenGL\.so|libvulkan\.so|libdrm\.so|libgbm\.so|libxcb-dri|libxcb-glx\.so|libglapi\.so|libwayland-egl\.so)"
 
           bundle_deps() {
             local dest="$1"; shift
@@ -253,6 +256,15 @@ jobs:
 
           # Pass 3 – one more level of transitive deps
           bundle_deps "$APP_DIR/usr/lib" "$APP_DIR/usr/lib/"*.so*
+
+          # Safety net: remove any GPU driver libs that slipped through transitive deps.
+          # These MUST come from the host to avoid EGL/GL driver mismatches.
+          # Note: libepoxy is intentionally KEPT – it's a pure function-pointer resolver
+          # that dlopen()s the host's libEGL/libGL at runtime.
+          ( cd "$APP_DIR/usr/lib" && rm -f libEGL.so* libGL.so* libGLX.so* \
+              libGLdispatch.so* libGLESv2.so* libOpenGL.so* libvulkan.so* \
+              libdrm.so* libgbm.so* libglapi.so* \
+              libwayland-egl.so* libxcb-glx.so* libxcb-dri*.so* 2>/dev/null || true )
 
           # ── Bundle WebKit process helper executables ──
           WEBKIT_PROC_DIR="/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
@@ -285,10 +297,6 @@ jobs:
           HERE=${SELF%/*}
           export LD_LIBRARY_PATH="$HERE/usr/bin/lib:$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
-          # Let GTK auto-detect the best backend (Wayland on Wayland compositors, X11
-          # otherwise).  Forcing GDK_BACKEND=x11 pushes the app into XWayland where
-          # Mesa's eglGetPlatformDisplayEXT fails on Fedora 43+ GNOME Wayland, causing
-          # an immediate abort.
           # Suppress "Failed to load module" warnings for optional GTK modules
           # (canberra-gtk-module, pk-gtk-module) that are not bundled.
           export GTK_MODULES=""

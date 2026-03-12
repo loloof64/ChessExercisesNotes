@@ -1,3 +1,7 @@
+# v0.1.15
+
+- fix Wayland crash with AppImage (remove libepoxy)
+
 # v0.1.14
 
 - fix Wayland crash with AppImage

@@ -1,3 +1,3 @@
 # Release
 
-- fix Wayland crash with AppImage
+- fix Wayland crash with AppImage (remove libepoxy)
