@@ -1,3 +1,7 @@
+# v0.1.12
+
+- fix Wayland issue with AppImage format
+
 # v0.1.11
 
 - upgrade gh action dependency setup-java

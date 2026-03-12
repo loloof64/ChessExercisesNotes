@@ -282,6 +282,7 @@ jobs:
           HERE=${SELF%/*}
           export LD_LIBRARY_PATH="$HERE/usr/bin/lib:$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
+          export GDK_BACKEND=x11
           exec "$HERE/usr/bin/chess_exercises_notes" "$@"
           APPRUN
           chmod +x "$APP_DIR/AppRun"
