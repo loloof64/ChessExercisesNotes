@@ -1,6 +1,7 @@
 # v0.1.11
 
 - upgrade gh action dependency setup-java
+- add missing dependencies for Deb/Rpm/AppImage formats
 
 # v0.1.10
 

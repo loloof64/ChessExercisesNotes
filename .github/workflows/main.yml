@@ -151,7 +151,7 @@ jobs:
           Section: games
           Priority: optional
           Architecture: amd64
-          Depends: libgtk-3-0
+          Depends: libgtk-3-0, libwebkit2gtk-4.1-0, libjavascriptcoregtk-4.1-0, libsecret-1-0
           Maintainer: loloof64
           Description: Synchronize your chess exercises books answers across your devices.
           CTRL
@@ -193,6 +193,7 @@ jobs:
           Summary:        ${APP_DISPLAY_NAME}
           License:        MIT
           AutoReqProv:    no
+          Requires:       gtk3, webkit2gtk4.1, libsecret
 
           %description
           Synchronize your chess exercises books answers across your devices.
@@ -214,10 +215,48 @@ jobs:
         run: |
           APP_DIR=AppDir
           mkdir -p "$APP_DIR/usr/bin"
+          mkdir -p "$APP_DIR/usr/lib"
           mkdir -p "$APP_DIR/usr/share/applications"
           mkdir -p "$APP_DIR/usr/share/icons/hicolor/256x256/apps"
 
           cp -r build/linux/x64/release/bundle/* "$APP_DIR/usr/bin/"
+
+          # ── Bundle system shared libraries needed at runtime ──
+          # Collect shared-lib deps of the main binary + Flutter plugin
+          # .so files, then do two extra passes for transitive deps.
+          # Only glibc / ld / libgcc / libstdc++ are excluded;
+          # everything else is bundled so the AppImage is self-contained.
+          EXCLUDE_RE="^(libc\.so|libm\.so|libdl\.so|librt\.so|libpthread\.so|ld-linux-x86-64\.so|libstdc\+\+\.so|libgcc_s\.so)"
+
+          bundle_deps() {
+            local dest="$1"; shift
+            for bin in "$@"; do
+              [ -f "$bin" ] || continue
+              ldd "$bin" 2>/dev/null | grep "=> /" | awk '{print $3}'
+            done | sort -u | while read -r lib; do
+              local name; name=$(basename "$lib")
+              echo "$name" | grep -qE "$EXCLUDE_RE" && continue
+              [ -f "$dest/$name" ] && continue
+              cp -L "$lib" "$dest/" 2>/dev/null || true
+            done
+          }
+
+          # Pass 1 – direct deps of the executable and its plugins
+          bundle_deps "$APP_DIR/usr/lib" \
+            "$APP_DIR/usr/bin/$APP_NAME" "$APP_DIR/usr/bin/lib/"*.so
+
+          # Pass 2 – transitive deps of the libraries we just copied
+          bundle_deps "$APP_DIR/usr/lib" "$APP_DIR/usr/lib/"*.so*
+
+          # Pass 3 – one more level of transitive deps
+          bundle_deps "$APP_DIR/usr/lib" "$APP_DIR/usr/lib/"*.so*
+
+          # ── Bundle WebKit process helper executables ──
+          WEBKIT_PROC_DIR="/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
+          if [ -d "$WEBKIT_PROC_DIR" ]; then
+            mkdir -p "$APP_DIR/usr/lib/webkit2gtk-4.1"
+            cp -a "$WEBKIT_PROC_DIR/"* "$APP_DIR/usr/lib/webkit2gtk-4.1/"
+          fi
 
           cat > "$APP_DIR/$APP_NAME.desktop" << DESKTOP
           [Desktop Entry]
@@ -241,7 +280,8 @@ jobs:
           #!/bin/sh
           SELF=$(readlink -f "$0")
           HERE=${SELF%/*}
-          export LD_LIBRARY_PATH="$HERE/usr/bin/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export LD_LIBRARY_PATH="$HERE/usr/bin/lib:$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
           exec "$HERE/usr/bin/chess_exercises_notes" "$@"
           APPRUN
           chmod +x "$APP_DIR/AppRun"

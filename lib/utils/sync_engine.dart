@@ -251,11 +251,11 @@ class SyncEngine {
 
     // The sync root folder ('books') must never be deleted — it is the anchor
     // of the whole sync tree. Deleting it would remove all content from Dropbox.
-    const _syncRoot = 'books';
+    const syncRoot = 'books';
 
     for (final path in allPaths) {
       // Belt-and-suspenders: never plan a deletion of the sync root itself.
-      if (path == _syncRoot) continue;
+      if (path == syncRoot) continue;
 
       final l = local[path];
       final r = remote[path];
