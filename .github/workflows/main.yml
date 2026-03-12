@@ -285,10 +285,11 @@ jobs:
           $releaseDir = "build\windows\x64\runner\Release"
           $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
             -latest -property installationPath
-          $redistDir = Get-ChildItem -Path "$vsPath\VC\Redist\MSVC" -Directory |
-            Sort-Object Name -Descending | Select-Object -First 1
-          $crtDir = Join-Path $redistDir.FullName "x64" | Get-ChildItem -Filter "Microsoft.VC*.CRT" |
+          $crtDir = Get-ChildItem -Path "$vsPath\VC\Redist\MSVC" -Recurse -Directory `
+            -Filter "Microsoft.VC*.CRT" |
+            Where-Object { $_.FullName -match '\\x64\\' } |
             Select-Object -First 1
+          if (-not $crtDir) { throw "VC++ CRT directory not found" }
           foreach ($dll in @('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')) {
             Copy-Item (Join-Path $crtDir.FullName $dll) -Destination $releaseDir
           }
