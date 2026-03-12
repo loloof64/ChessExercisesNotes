@@ -1,7 +1,3 @@
-# v0.1.14
-
-- fix AppImage crash on Fedora
-
 # v0.1.13
 
 - fix AppImage crash on Fedora (EGL platform extensions missing) : exclude EGL/GL/Mesa libs from bundle so Impeller uses the host system's graphics stack
