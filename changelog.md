@@ -1,3 +1,7 @@
+# v0.1.11
+
+- upgrade gh action dependency setup-java
+
 # v0.1.10
 
 - fix windows build error

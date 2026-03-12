@@ -1,3 +1,3 @@
 # Release
 
-- fix windows build error
+- upgrade gh action dependency setup-java
