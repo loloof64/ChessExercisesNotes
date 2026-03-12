@@ -224,10 +224,12 @@ jobs:
           # ── Bundle system shared libraries needed at runtime ──
           # Collect shared-lib deps of the main binary + Flutter plugin
           # .so files, then do two extra passes for transitive deps.
-          # glibc / ld / libgcc / libstdc++ are excluded, plus all EGL/GL/Mesa
-          # graphics libs so Impeller uses the host system's own driver stack
-          # (avoids "No provider of eglGetPlatformDisplayEXT found" on Fedora/NVIDIA).
-          EXCLUDE_RE="^(libc\.so|libm\.so|libdl\.so|librt\.so|libpthread\.so|ld-linux-x86-64\.so|libstdc\+\+\.so|libgcc_s\.so|libEGL\.so|libGL\.so|libGLX\.so|libGLdispatch\.so|libdrm\.so|libgbm\.so|libxcb-dri)"
+          # glibc / ld / libgcc / libstdc++ are excluded, plus ALL EGL/GL/Mesa/Vulkan
+          # graphics libs so Flutter always uses the host system's own driver stack.
+          # This avoids "No provider of eglGetPlatformDisplayEXT found" on Fedora/NVIDIA
+          # (libGLESv2 and libvulkan are included to prevent Ubuntu stubs from shadowing
+          # the host Mesa when running under a Wayland compositor).
+          EXCLUDE_RE="^(libc\.so|libm\.so|libdl\.so|librt\.so|libpthread\.so|ld-linux-x86-64\.so|libstdc\+\+\.so|libgcc_s\.so|libEGL\.so|libGL\.so|libGLX\.so|libGLdispatch\.so|libGLESv2\.so|libvulkan\.so|libdrm\.so|libgbm\.so|libxcb-dri)"
 
           bundle_deps() {
             local dest="$1"; shift
@@ -283,7 +285,10 @@ jobs:
           HERE=${SELF%/*}
           export LD_LIBRARY_PATH="$HERE/usr/bin/lib:$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
-          export GDK_BACKEND=x11
+          # Let GTK auto-detect the best backend (Wayland on Wayland compositors, X11
+          # otherwise).  Forcing GDK_BACKEND=x11 pushes the app into XWayland where
+          # Mesa's eglGetPlatformDisplayEXT fails on Fedora 43+ GNOME Wayland, causing
+          # an immediate abort.
           # Suppress "Failed to load module" warnings for optional GTK modules
           # (canberra-gtk-module, pk-gtk-module) that are not bundled.
           export GTK_MODULES=""

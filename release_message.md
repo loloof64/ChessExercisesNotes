@@ -1,3 +1,3 @@
 # Release
 
-- fix AppImage crash on Fedora
+- fix Wayland crash with AppImage
