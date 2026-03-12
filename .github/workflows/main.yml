@@ -260,7 +260,7 @@ jobs:
             ${{ env.APP_NAME }}-${{ env.TAG }}.AppImage
 
   # ────────────────────────────────────────────────────────────────
-  # Windows – EXE, MSIX, ZIP
+  # Windows – Installer EXE (Inno Setup), MSIX, ZIP
   # ────────────────────────────────────────────────────────────────
   build-windows:
     needs: prepare
@@ -279,6 +279,16 @@ jobs:
       - run: flutter pub get
       - run: flutter build windows --release
 
+      - name: Bundle VC++ runtime DLLs
+        shell: pwsh
+        run: |
+          $releaseDir = "build\windows\x64\runner\Release"
+          $vcToolsDir = "$env:VCToolsRedistDir"
+          $crtDir = Join-Path $vcToolsDir "x64\Microsoft.VC143.CRT"
+          foreach ($dll in @('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')) {
+            Copy-Item (Join-Path $crtDir $dll) -Destination $releaseDir
+          }
+
       - name: Create ZIP
         shell: pwsh
         run: |
@@ -286,11 +296,40 @@ jobs:
             -Path "build\windows\x64\runner\Release\*" `
             -DestinationPath "${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.zip"
 
-      - name: Copy EXE
+      - name: Build Installer EXE (Inno Setup)
         shell: pwsh
         run: |
-          Copy-Item "build\windows\x64\runner\Release\${{ env.APP_NAME }}.exe" `
-            "${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.exe"
+          $issContent = @"
+          [Setup]
+          AppName=${{ env.APP_DISPLAY_NAME }}
+          AppVersion=${{ needs.prepare.outputs.version }}
+          AppPublisher=loloof64
+          AppId=${{ env.APP_ID }}
+          DefaultDirName={autopf}\${{ env.APP_DISPLAY_NAME }}
+          DefaultGroupName=${{ env.APP_DISPLAY_NAME }}
+          OutputDir=.
+          OutputBaseFilename=${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}
+          Compression=lzma2
+          SolidCompression=yes
+          ArchitecturesAllowed=x64compatible
+          ArchitecturesInstallIn64BitMode=x64compatible
+          UninstallDisplayIcon={app}\${{ env.APP_NAME }}.exe
+
+          [Files]
+          Source: "build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+          [Icons]
+          Name: "{group}\${{ env.APP_DISPLAY_NAME }}"; Filename: "{app}\${{ env.APP_NAME }}.exe"
+          Name: "{autodesktop}\${{ env.APP_DISPLAY_NAME }}"; Filename: "{app}\${{ env.APP_NAME }}.exe"; Tasks: desktopicon
+
+          [Tasks]
+          Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional icons:"
+
+          [Run]
+          Filename: "{app}\${{ env.APP_NAME }}.exe"; Description: "Launch ${{ env.APP_DISPLAY_NAME }}"; Flags: nowait postinstall skipifsilent
+          "@
+          $issContent | Out-File -FilePath "installer.iss" -Encoding UTF8
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer.iss"
 
       - name: Build MSIX
         shell: pwsh
