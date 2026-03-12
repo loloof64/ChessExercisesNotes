@@ -41,7 +41,7 @@ jobs:
       tag: ${{ steps.tag.outputs.tag }}
       version: ${{ steps.tag.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Get current tag
@@ -60,7 +60,7 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -80,7 +80,7 @@ jobs:
              "${APP_NAME}-${TAG}.apk"
           cp build/app/outputs/bundle/release/app-release.aab \
              "${APP_NAME}-${TAG}.aab"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: android
           path: |
@@ -98,7 +98,7 @@ jobs:
       VERSION: ${{ needs.prepare.outputs.version }}
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v4
         with:
@@ -251,7 +251,7 @@ jobs:
           chmod +x appimagetool
           ./appimagetool --appimage-extract-and-run "$APP_DIR" "${APP_NAME}-${TAG}.AppImage"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: linux
           path: |
@@ -270,7 +270,7 @@ jobs:
       VERSION: ${{ needs.prepare.outputs.version }}
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v4
         with:
@@ -283,10 +283,14 @@ jobs:
         shell: pwsh
         run: |
           $releaseDir = "build\windows\x64\runner\Release"
-          $vcToolsDir = "$env:VCToolsRedistDir"
-          $crtDir = Join-Path $vcToolsDir "x64\Microsoft.VC143.CRT"
+          $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+            -latest -property installationPath
+          $redistDir = Get-ChildItem -Path "$vsPath\VC\Redist\MSVC" -Directory |
+            Sort-Object Name -Descending | Select-Object -First 1
+          $crtDir = Join-Path $redistDir.FullName "x64" | Get-ChildItem -Filter "Microsoft.VC*.CRT" |
+            Select-Object -First 1
           foreach ($dll in @('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')) {
-            Copy-Item (Join-Path $crtDir $dll) -Destination $releaseDir
+            Copy-Item (Join-Path $crtDir.FullName $dll) -Destination $releaseDir
           }
 
       - name: Create ZIP
@@ -344,7 +348,7 @@ jobs:
             --output-name "${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}" `
             --output-path "."
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: windows
           path: |
@@ -361,8 +365,8 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v8
         with:
           merge-multiple: true
 

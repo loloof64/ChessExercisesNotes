@@ -1,3 +1,8 @@
+# v0.1.9
+
+- fix in workflow : forces the use of NodeJS 24
+- fix windows build error
+
 # v0.1.8
 
 - fix in workflow : forces the use of NodeJS 24
