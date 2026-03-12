@@ -294,7 +294,7 @@ jobs:
             --display-name "${{ env.APP_DISPLAY_NAME }}" `
             --publisher-display-name "loloof64" `
             --identity-name "com.loloof64.chess-exercises-notes" `
-            --msix-version "${{ needs.prepare.outputs.version }}.0" `
+            --version "${{ needs.prepare.outputs.version }}.0" `
             --install-certificate false `
             --output-name "${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}" `
             --output-path "."

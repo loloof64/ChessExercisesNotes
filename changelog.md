@@ -1,3 +1,7 @@
+# v0.1.7
+
+- fix Windows MSIX build (incorrect flag msix-version)
+
 # v0.1.6
 
 - change the flutter builder package in workflows

@@ -1,4 +1,3 @@
 # Release
 
-- change the flutter builder package in workflows
-- fix Windows MSIX build
+- fix Windows MSIX build (incorrect flag msix-version)
