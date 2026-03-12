@@ -224,9 +224,10 @@ jobs:
           # ── Bundle system shared libraries needed at runtime ──
           # Collect shared-lib deps of the main binary + Flutter plugin
           # .so files, then do two extra passes for transitive deps.
-          # Only glibc / ld / libgcc / libstdc++ are excluded;
-          # everything else is bundled so the AppImage is self-contained.
-          EXCLUDE_RE="^(libc\.so|libm\.so|libdl\.so|librt\.so|libpthread\.so|ld-linux-x86-64\.so|libstdc\+\+\.so|libgcc_s\.so)"
+          # glibc / ld / libgcc / libstdc++ are excluded, plus all EGL/GL/Mesa
+          # graphics libs so Impeller uses the host system's own driver stack
+          # (avoids "No provider of eglGetPlatformDisplayEXT found" on Fedora/NVIDIA).
+          EXCLUDE_RE="^(libc\.so|libm\.so|libdl\.so|librt\.so|libpthread\.so|ld-linux-x86-64\.so|libstdc\+\+\.so|libgcc_s\.so|libEGL\.so|libGL\.so|libGLX\.so|libGLdispatch\.so|libdrm\.so|libgbm\.so|libxcb-dri)"
 
           bundle_deps() {
             local dest="$1"; shift
@@ -283,6 +284,9 @@ jobs:
           export LD_LIBRARY_PATH="$HERE/usr/bin/lib:$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
           export GDK_BACKEND=x11
+          # Suppress "Failed to load module" warnings for optional GTK modules
+          # (canberra-gtk-module, pk-gtk-module) that are not bundled.
+          export GTK_MODULES=""
           exec "$HERE/usr/bin/chess_exercises_notes" "$@"
           APPRUN
           chmod +x "$APP_DIR/AppRun"
