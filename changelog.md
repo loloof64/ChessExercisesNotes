@@ -1,6 +1,7 @@
 # v0.1.16
 
 - remove MSIX build
+- setup keystore for Android build
 
 # v0.1.15
 
