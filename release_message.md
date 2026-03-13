@@ -1,3 +1,3 @@
 # Release
 
-- fix android build workflow
+- remove AppBundle artifact

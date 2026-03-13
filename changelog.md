@@ -1,3 +1,7 @@
+# v0.1.20
+
+- remove AppBundle artifact
+
 # v0.1.19
 
 - fix android build workflow

@@ -52,7 +52,7 @@ jobs:
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
 
   # ────────────────────────────────────────────────────────────────
-  # Android – APK & AAB
+  # Android – APK
   # ────────────────────────────────────────────────────────────────
   build-android:
     needs: prepare
@@ -88,20 +88,16 @@ jobs:
 
       - run: flutter pub get
       - run: flutter build apk --release
-      - run: flutter build appbundle --release
       - name: Rename artifacts
         run: |
           TAG="${{ needs.prepare.outputs.tag }}"
           cp build/app/outputs/flutter-apk/app-release.apk \
              "${APP_NAME}-${TAG}.apk"
-          cp build/app/outputs/bundle/release/app-release.aab \
-             "${APP_NAME}-${TAG}.aab"
       - uses: actions/upload-artifact@v6
         with:
           name: android
           path: |
             ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.apk
-            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.aab
 
   # ────────────────────────────────────────────────────────────────
   # Linux – AppImage, DEB, RPM
@@ -452,7 +448,6 @@ jobs:
           body: ${{ steps.message.outputs.body }}
           files: |
             ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.apk
-            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.aab
             ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.deb
             ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.rpm
             ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.AppImage
