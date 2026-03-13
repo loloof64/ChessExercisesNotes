@@ -318,7 +318,7 @@ jobs:
             ${{ env.APP_NAME }}-${{ env.TAG }}.AppImage
 
   # ────────────────────────────────────────────────────────────────
-  # Windows – Installer EXE (Inno Setup), MSIX, ZIP
+  # Windows – Installer EXE (Inno Setup), ZIP
   # ────────────────────────────────────────────────────────────────
   build-windows:
     needs: prepare
@@ -394,26 +394,12 @@ jobs:
           $issContent | Out-File -FilePath "installer.iss" -Encoding UTF8
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer.iss"
 
-      - name: Build MSIX
-        shell: pwsh
-        run: |
-          dart pub add --dev msix
-          dart run msix:create `
-            --display-name "${{ env.APP_DISPLAY_NAME }}" `
-            --publisher-display-name "loloof64" `
-            --identity-name "com.loloof64.chess-exercises-notes" `
-            --version "${{ needs.prepare.outputs.version }}.0" `
-            --install-certificate false `
-            --output-name "${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}" `
-            --output-path "."
-
       - uses: actions/upload-artifact@v6
         with:
           name: windows
           path: |
             ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.zip
             ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.exe
-            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.msix
 
   # ────────────────────────────────────────────────────────────────
   # Publish GitHub Release
@@ -456,4 +442,3 @@ jobs:
             ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.AppImage
             ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.zip
             ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.exe
-            ${{ env.APP_NAME }}-${{ needs.prepare.outputs.tag }}.msix

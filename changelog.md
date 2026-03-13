@@ -1,3 +1,7 @@
+# v0.1.16
+
+- remove MSIX build
+
 # v0.1.15
 
 - fix Wayland crash with AppImage (remove libepoxy)
