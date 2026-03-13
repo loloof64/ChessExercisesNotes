@@ -1,3 +1,3 @@
 # Release
 
-- remove AppBundle artifact
+- fix dropbox connection issue in android apk

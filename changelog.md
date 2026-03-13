@@ -1,3 +1,7 @@
+# v0.1.21
+
+- fix dropbox connection issue in android apk
+
 # v0.1.20
 
 - remove AppBundle artifact
