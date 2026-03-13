@@ -42,7 +42,6 @@ android {
             keyPassword = keyProperties.getProperty("keyPassword") ?: ""
             storeFile = keyProperties.getProperty("storeFile")
                 ?.let { file(it) }
-                ?: file("")
             storePassword = keyProperties.getProperty("storePassword") ?: ""
         }
     }
@@ -53,10 +52,6 @@ android {
                 signingConfigs.getByName("release")
             else
                 signingConfigs.getByName("debug")
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
         }
     }
 }

@@ -1,3 +1,8 @@
+# v0.1.23
+
+- fix: elements cards text are centered horizontally
+- fix: add a retry strategy for network operations
+
 # v0.1.22
 
 - fix android build

@@ -1,7 +1,7 @@
 name: chess_exercises_notes
 description: "Syncronize your chess exercises books answers across your devices."
 publish_to: "none"
-version: 0.1.22+1
+version: 0.1.23+1
 
 environment:
   sdk: ^3.11.1

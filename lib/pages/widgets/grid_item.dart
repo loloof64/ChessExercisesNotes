@@ -42,29 +42,31 @@ class GridItemWidget extends StatelessWidget {
           padding: const EdgeInsets.all(4.0),
           child: Stack(
             children: [
-              Column(
-                spacing: 5,
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    relatedItem.name,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight(700),
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  if (authors != null && authors.isNotEmpty)
+              Center(
+                child: Column(
+                  spacing: 5,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
                     Text(
-                      authors,
+                      relatedItem.name,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight(700),
                         color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                ],
+                    if (authors != null && authors.isNotEmpty)
+                      Text(
+                        authors,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                  ],
+                ),
               ),
               Column(
                 mainAxisSize: MainAxisSize.max,

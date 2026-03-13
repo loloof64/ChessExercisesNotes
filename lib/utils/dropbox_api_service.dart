@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:chess_exercises_notes/utils/dropbox_cursor_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -8,6 +9,29 @@ class DropboxApiService {
   final String accessToken;
 
   DropboxApiService(this.accessToken);
+
+  /// Retries [fn] up to [maxAttempts] times on transient TLS/socket errors.
+  Future<T> _withRetry<T>(
+    Future<T> Function() fn, {
+    int maxAttempts = 3,
+  }) async {
+    int attempt = 0;
+    while (true) {
+      try {
+        return await fn();
+      } on HandshakeException catch (e) {
+        attempt++;
+        if (attempt >= maxAttempts) rethrow;
+        debugPrint('HandshakeException (attempt $attempt), retrying… $e');
+        await Future.delayed(Duration(milliseconds: 500 * attempt));
+      } on SocketException catch (e) {
+        attempt++;
+        if (attempt >= maxAttempts) rethrow;
+        debugPrint('SocketException (attempt $attempt), retrying… $e');
+        await Future.delayed(Duration(milliseconds: 500 * attempt));
+      }
+    }
+  }
 
   Future<List<dynamic>> listAllFiles(String path) async {
     final entries = <dynamic>[];
@@ -44,31 +68,35 @@ class DropboxApiService {
   }
 
   Future<Map<String, dynamic>> _listFolder(String path) async {
-    final response = await http.post(
-      Uri.parse("https://api.dropboxapi.com/2/files/list_folder"),
-      headers: {
-        "Authorization": "Bearer $accessToken",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({
-        "path": path,
-        "recursive": true,
-        "include_deleted": true,
-        "include_non_downloadable_files": false,
-      }),
+    final response = await _withRetry(
+      () => http.post(
+        Uri.parse("https://api.dropboxapi.com/2/files/list_folder"),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "path": path,
+          "recursive": true,
+          "include_deleted": true,
+          "include_non_downloadable_files": false,
+        }),
+      ),
     );
 
     return jsonDecode(response.body);
   }
 
   Future<Map<String, dynamic>> _listFolderContinue(String cursor) async {
-    final response = await http.post(
-      Uri.parse("https://api.dropboxapi.com/2/files/list_folder/continue"),
-      headers: {
-        "Authorization": "Bearer $accessToken",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({"cursor": cursor}),
+    final response = await _withRetry(
+      () => http.post(
+        Uri.parse("https://api.dropboxapi.com/2/files/list_folder/continue"),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"cursor": cursor}),
+      ),
     );
 
     return jsonDecode(response.body);
@@ -76,18 +104,20 @@ class DropboxApiService {
 
   /// Upload a file
   Future<void> uploadFile(String dropboxPath, List<int> bytes) async {
-    final response = await http.post(
-      Uri.parse("https://content.dropboxapi.com/2/files/upload"),
-      headers: {
-        "Authorization": "Bearer $accessToken",
-        "Dropbox-API-Arg": jsonEncode({
-          "path": dropboxPath,
-          "mode": "overwrite",
-          "autorename": false,
-        }),
-        "Content-Type": "application/octet-stream",
-      },
-      body: bytes,
+    final response = await _withRetry(
+      () => http.post(
+        Uri.parse("https://content.dropboxapi.com/2/files/upload"),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Dropbox-API-Arg": jsonEncode({
+            "path": dropboxPath,
+            "mode": "overwrite",
+            "autorename": false,
+          }),
+          "Content-Type": "application/octet-stream",
+        },
+        body: bytes,
+      ),
     );
 
     if (response.statusCode != 200) {
@@ -97,12 +127,14 @@ class DropboxApiService {
 
   /// Download a file
   Future<List<int>> downloadFile(String dropboxPath) async {
-    final response = await http.post(
-      Uri.parse("https://content.dropboxapi.com/2/files/download"),
-      headers: {
-        "Authorization": "Bearer $accessToken",
-        "Dropbox-API-Arg": jsonEncode({"path": dropboxPath}),
-      },
+    final response = await _withRetry(
+      () => http.post(
+        Uri.parse("https://content.dropboxapi.com/2/files/download"),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Dropbox-API-Arg": jsonEncode({"path": dropboxPath}),
+        },
+      ),
     );
 
     if (response.statusCode != 200) {
@@ -134,18 +166,20 @@ class DropboxApiService {
   }
 
   Future<Map<String, dynamic>> _listFolderForSync(String path) async {
-    final response = await http.post(
-      Uri.parse("https://api.dropboxapi.com/2/files/list_folder"),
-      headers: {
-        "Authorization": "Bearer $accessToken",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({
-        "path": path,
-        "recursive": true,
-        "include_deleted": false,
-        "include_non_downloadable_files": false,
-      }),
+    final response = await _withRetry(
+      () => http.post(
+        Uri.parse("https://api.dropboxapi.com/2/files/list_folder"),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "path": path,
+          "recursive": true,
+          "include_deleted": false,
+          "include_non_downloadable_files": false,
+        }),
+      ),
     );
 
     if (response.statusCode == 409) {
@@ -168,13 +202,15 @@ class DropboxApiService {
 
   /// Create a folder on Dropbox. Ignores "already exists" errors.
   Future<void> createFolder(String dropboxPath) async {
-    final response = await http.post(
-      Uri.parse("https://api.dropboxapi.com/2/files/create_folder_v2"),
-      headers: {
-        "Authorization": "Bearer $accessToken",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({"path": dropboxPath, "autorename": false}),
+    final response = await _withRetry(
+      () => http.post(
+        Uri.parse("https://api.dropboxapi.com/2/files/create_folder_v2"),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"path": dropboxPath, "autorename": false}),
+      ),
     );
 
     if (response.statusCode == 200) return;
@@ -187,13 +223,15 @@ class DropboxApiService {
 
   /// Delete a file or folder on Dropbox.
   Future<void> deletePath(String dropboxPath) async {
-    final response = await http.post(
-      Uri.parse("https://api.dropboxapi.com/2/files/delete_v2"),
-      headers: {
-        "Authorization": "Bearer $accessToken",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({"path": dropboxPath}),
+    final response = await _withRetry(
+      () => http.post(
+        Uri.parse("https://api.dropboxapi.com/2/files/delete_v2"),
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"path": dropboxPath}),
+      ),
     );
 
     if (response.statusCode == 200) return;
