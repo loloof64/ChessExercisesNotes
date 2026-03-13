@@ -1,3 +1,7 @@
+# v0.1.17
+
+- fix android build workflow
+
 # v0.1.16
 
 - remove MSIX build
