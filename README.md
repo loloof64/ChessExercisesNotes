@@ -20,6 +20,16 @@ In order to install the deb file, you may want to activate the universe reposito
 sudo add-apt-repository universe
 ```
 
+then
+
+```bash
+sudo apt install ./chess_exercises_notes-vx.x.x.deb
+```
+
+where you replace x.x.x with the package version.
+
+Also, if you can't manage to run the AppImage, I suggest you to install the deb file instead.
+
 ## For developpers
 
 ### Riverpod files generation
