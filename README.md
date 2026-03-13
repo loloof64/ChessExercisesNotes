@@ -56,7 +56,7 @@ keytool -genkeypair -v \
 storePassword=<store password>
 keyPassword=<key password>
 keyAlias=<key-alias>
-storeFile=app/<keystore-name.jks>
+storeFile=<keystore-name.jks>
 ```
 
 Both `android/key.properties` and `android/app/<keystore-name>.jks` are already listed in `android/.gitignore` and will not be published.
