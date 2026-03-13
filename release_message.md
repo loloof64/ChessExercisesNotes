@@ -1,3 +1,3 @@
 # Release
 
-- fix dropbox connection issue in android apk
+- fix android build

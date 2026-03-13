@@ -18,3 +18,7 @@
 # OkHttp / HTTP clients (used by flutter_web_auth_2 internally)
 -dontwarn okhttp3.**
 -dontwarn okio.**
+
+# Flutter references Play Core for deferred components (split APKs) but we
+# don't use the Play Store / deferred components — suppress missing-class errors.
+-dontwarn com.google.android.play.core.**
