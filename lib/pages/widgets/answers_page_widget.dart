@@ -30,46 +30,48 @@ class EditAnswerWidget extends StatelessWidget {
               "pages.answers.dialogs.edit_answer.title",
               translationParams: {"answerName": originalFileName},
             ),
-      content: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 5.0,
-        children: [
-          Row(
-            spacing: 5.0,
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              I18nText("pages.answers.dialogs.add_answer.label_name"),
-              Expanded(
-                child: TextField(
-                  controller: newAnswerNameController,
-                  decoration: InputDecoration(
-                    hint: I18nText(
-                      "pages.answers.dialogs.add_answer.placeholder_name",
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 5.0,
+          children: [
+            Row(
+              spacing: 5.0,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                I18nText("pages.answers.dialogs.add_answer.label_name"),
+                Expanded(
+                  child: TextField(
+                    controller: newAnswerNameController,
+                    decoration: InputDecoration(
+                      hint: I18nText(
+                        "pages.answers.dialogs.add_answer.placeholder_name",
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          Row(
-            spacing: 5.0,
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              I18nText("pages.answers.dialogs.add_answer.label_content"),
-              Expanded(
-                child: TextField(
-                  controller: newAnswerContentController,
-                  minLines: 5,
-                  maxLines: 8,
+              ],
+            ),
+            Row(
+              spacing: 5.0,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                I18nText("pages.answers.dialogs.add_answer.label_content"),
+                Expanded(
+                  child: TextField(
+                    controller: newAnswerContentController,
+                    minLines: 5,
+                    maxLines: 8,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
       actions: [
         CancelButton(

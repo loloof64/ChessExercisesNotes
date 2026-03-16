@@ -1,7 +1,7 @@
 # v0.1.24
 
 - feat: replace floatting buttons with action buttons in the three pages
-
+- fix : make edit answer dialog scrollable
 
 # v0.1.23
 

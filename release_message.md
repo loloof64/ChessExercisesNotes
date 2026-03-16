@@ -1,4 +1,4 @@
 # Release
 
-- fix: elements cards text are centered horizontally
-- fix: add a retry strategy for network operations
+- feat: replace floatting buttons with action buttons in the three pages
+- fix : make edit answer dialog content scrollable
