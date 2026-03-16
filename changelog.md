@@ -1,3 +1,7 @@
+# v0.1.25
+
+- fix: be less restrictive about bundled libraries in AppImage
+
 # v0.1.24
 
 - feat: replace floatting buttons with action buttons in the three pages
