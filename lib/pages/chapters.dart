@@ -368,6 +368,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
             icon: Icon(Icons.arrow_upward),
             onPressed: () => Navigator.of(context).pop(false),
           ),
+          IconButton(onPressed: _purposeAddChapter, icon: Icon(Icons.add)),
           IconButton(onPressed: _refreshFolderItems, icon: Icon(Icons.refresh)),
         ],
       ),
@@ -440,11 +441,6 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
                 ],
               ),
             ),
-      floatingActionButton: IconButton.outlined(
-        color: Colors.lightGreen,
-        onPressed: _purposeAddChapter,
-        icon: Icon(Icons.add),
-      ),
     );
   }
 }

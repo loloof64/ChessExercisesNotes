@@ -1,3 +1,8 @@
+# v0.1.24
+
+- feat: replace floatting buttons with action buttons in the three pages
+
+
 # v0.1.23
 
 - fix: elements cards text are centered horizontally

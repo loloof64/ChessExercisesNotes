@@ -286,6 +286,7 @@ class _BooksPageWidgetState extends ConsumerState<BooksPageWidget> {
       appBar: AppBar(
         title: I18nText("pages.books.title"),
         actions: [
+          IconButton(onPressed: _purposeAddBook, icon: Icon(Icons.add)),
           IconButton(onPressed: _refreshFolderItems, icon: Icon(Icons.refresh)),
         ],
       ),
@@ -307,11 +308,6 @@ class _BooksPageWidgetState extends ConsumerState<BooksPageWidget> {
                 children: booksWidgets,
               ),
             ),
-      floatingActionButton: IconButton.outlined(
-        color: Colors.lightGreen,
-        onPressed: _purposeAddBook,
-        icon: Icon(Icons.add),
-      ),
     );
   }
 }

@@ -308,6 +308,7 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
             icon: Icon(Icons.arrow_upward),
             onPressed: () => Navigator.of(context).pop(false),
           ),
+          IconButton(onPressed: _purposeAddAnswer, icon: Icon(Icons.add)),
           IconButton(onPressed: _refreshFolderItems, icon: Icon(Icons.refresh)),
         ],
       ),
@@ -447,11 +448,6 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
                 ],
               ),
             ),
-      floatingActionButton: IconButton.outlined(
-        color: Colors.lightGreen,
-        onPressed: _purposeAddAnswer,
-        icon: Icon(Icons.add),
-      ),
     );
   }
 }
