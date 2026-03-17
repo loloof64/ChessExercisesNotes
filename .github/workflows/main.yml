@@ -244,7 +244,7 @@ jobs:
           # falls through to the host's real driver, which has the proper platform
           # extensions.  This avoids "No provider of eglGetPlatformDisplayEXT" on
           # Fedora/NVIDIA while keeping the AppImage self-contained.
-          EXCLUDE_RE="^(libc\.so|libm\.so|libdl\.so|librt\.so|libpthread\.so|ld-linux-x86-64\.so)"
+          EXCLUDE_RE="^()"
 
           bundle_deps() {
             local dest="$1"; shift

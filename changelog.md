@@ -1,3 +1,7 @@
+# v0.1.26
+
+- fix: be less restrictive about bundled libraries in AppImage
+
 # v0.1.25
 
 - fix: be less restrictive about bundled libraries in AppImage
