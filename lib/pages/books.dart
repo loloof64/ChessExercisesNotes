@@ -88,10 +88,14 @@ class _BooksPageWidgetState extends ConsumerState<BooksPageWidget> {
     );
     await booksDir.create();
 
+    final Directory oldBookFolder = Directory(
+      p.join(booksDir.path, relatedBook.folderName),
+    );
     final Directory newBookFolder = Directory(
       p.join(booksDir.path, bookToUpdate.folderName),
     );
-    await newBookFolder.create();
+    await oldBookFolder.create();
+    await oldBookFolder.rename(newBookFolder.path);
     await bookToUpdate.serializeToFile(newBookFolder, metadataFileName);
 
     await _refreshFolderItems();

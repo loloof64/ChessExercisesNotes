@@ -1,3 +1,3 @@
 # Release
 
-- fix: be less restrictive about bundled libraries in AppImage
+- fix : editing a book created a new one instead of renaming it
