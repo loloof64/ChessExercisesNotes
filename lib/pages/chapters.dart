@@ -164,6 +164,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
                 } else if (isFolderUnique) {
                   _newChapterNameController.clear();
                   final createdChapter = Chapter(
+                    relatedBookFolderName: widget.bookFolderName,
                     chapterFolderName: securedFolderName,
                     name: purposedNewName,
                   );
@@ -301,16 +302,20 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
     await booksDir.create();
 
     final Directory chaptersDir = Directory(
-      p.join(booksDir.path, chapterFolderName),
+      p.join(booksDir.path, relatedChapter.relatedBookFolderName),
     );
     await chaptersDir.create();
 
+    final Directory oldChapterFolder = Directory(
+      p.join(chaptersDir.path, relatedChapter.chapterFolderName),
+    );
     final Directory newChapterFolder = Directory(
       p.join(chaptersDir.path, chapterToUpdate.chapterFolderName),
     );
-    await newChapterFolder.create();
-
+    await oldChapterFolder.create();
+    await oldChapterFolder.rename(newChapterFolder.path);
     await chapterToUpdate.serializeToFile(newChapterFolder, metadataFileName);
+
     await _refreshFolderItems();
   }
 
@@ -324,6 +329,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
       builder: (dialogContex) {
         return EditChapterWidget(
           isInAddMode: false,
+          relatedBookFolderName: widget.bookFolderName,
           newChapterNameController: _newChapterNameController,
           isFolderNameReserved: _isFolderNameReserved,
         );

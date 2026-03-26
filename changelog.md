@@ -1,6 +1,7 @@
 # v0.1.27
 
 - fix : editing a book created a new one instead of renaming it
+- fix : editing a chapter created a new one instead of renaming it
 
 # v0.1.26
 

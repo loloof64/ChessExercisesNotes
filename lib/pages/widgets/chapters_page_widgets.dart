@@ -6,12 +6,14 @@ import 'package:flutter_i18n/widgets/i18n_text.dart';
 
 class EditChapterWidget extends StatelessWidget {
   final bool isInAddMode;
+  final String relatedBookFolderName;
   final TextEditingController newChapterNameController;
   final Future<bool> Function(String folderName) isFolderNameReserved;
 
   const EditChapterWidget({
     super.key,
     required this.isInAddMode,
+    required this.relatedBookFolderName,
     required this.newChapterNameController,
     required this.isFolderNameReserved,
   });
@@ -83,6 +85,7 @@ class EditChapterWidget extends StatelessWidget {
             else if (!isInAddMode || isFolderUnique) {
               newChapterNameController.clear();
               final createdChapter = Chapter(
+                relatedBookFolderName: relatedBookFolderName,
                 chapterFolderName: securedFolderName,
                 name: purposedNewName,
               );
