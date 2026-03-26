@@ -1,5 +1,7 @@
 # chess_exercises_notes
 
+[![build_releases](https://github.com/loloof64/ChessExercisesNotes/actions/workflows/main.yml/badge.svg?branch=releases)](https://github.com/loloof64/ChessExercisesNotes/actions/workflows/main.yml)
+
 Synchronize your chess exercises books answers across your devices :
 
 - you can create books references, chapters references and answers files locally
