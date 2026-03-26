@@ -60,7 +60,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
     await chaptersDir.create();
 
     final Directory newChapterFolder = Directory(
-      p.join(chaptersDir.path, chapterToCreate.name),
+      p.join(chaptersDir.path, chapterToCreate.chapterFolderName),
     );
     await newChapterFolder.create();
     await chapterToCreate.serializeToFile(newChapterFolder, metadataFileName);
