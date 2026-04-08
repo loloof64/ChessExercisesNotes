@@ -314,29 +314,6 @@ class SyncEngine {
       }
     }
 
-    // --- Safety: abort if mass deletions are detected ---
-    final deleteCount = actions
-        .where(
-          (a) =>
-              a.type == _SyncActionType.deleteLocal ||
-              a.type == _SyncActionType.deleteRemote,
-        )
-        .length;
-
-    if (deleteCount > 0 && _previousManifest.isNotEmpty) {
-      final threshold = (_previousManifest.length * 0.5).ceil().clamp(5, 9999);
-      if (deleteCount > threshold) {
-        debugPrint(
-          'Sync ABORTED: $deleteCount deletions planned '
-          '(threshold=$threshold, manifest=${_previousManifest.length}).',
-        );
-        throw Exception(
-          'Sync safety: too many deletions ($deleteCount). '
-          'Aborting to protect data.',
-        );
-      }
-    }
-
     // Sort: create folders first, then files, then delete files, then delete
     // folders (deepest first so children are removed before parents).
     actions.sort((a, b) {
