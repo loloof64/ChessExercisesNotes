@@ -40,13 +40,13 @@ final class SyncProvider extends $NotifierProvider<Sync, SyncState> {
   }
 }
 
-String _$syncHash() => r'0a455ab99ba6f5cb7a605889bb122c2361f06258';
+String _$syncHash() => r'00c2b6c0c0c06634a97cce66fa659a736942a911';
 
 abstract class _$Sync extends $Notifier<SyncState> {
   SyncState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<SyncState, SyncState>;
     final element =
         ref.element
@@ -56,6 +56,6 @@ abstract class _$Sync extends $Notifier<SyncState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

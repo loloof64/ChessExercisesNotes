@@ -48,7 +48,7 @@ abstract class _$DropboxAccountNotifier extends $Notifier<DropboxAccount?> {
   DropboxAccount? build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<DropboxAccount?, DropboxAccount?>;
     final element =
         ref.element
@@ -58,6 +58,6 @@ abstract class _$DropboxAccountNotifier extends $Notifier<DropboxAccount?> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

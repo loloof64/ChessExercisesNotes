@@ -2,7 +2,7 @@ import 'package:chess_exercises_notes/models/local_items/answer.dart';
 import 'package:chess_exercises_notes/pages/answers.dart';
 import 'package:chess_exercises_notes/pages/widgets/dialog_buttons.dart';
 import 'package:chess_exercises_notes/utils/filesystem.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
 
 class EditAnswerWidget extends StatelessWidget {

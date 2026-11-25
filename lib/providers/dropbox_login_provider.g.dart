@@ -33,13 +33,13 @@ final class DropboxLoginProvider
   DropboxLogin create() => DropboxLogin();
 }
 
-String _$dropboxLoginHash() => r'14cac3b494a566ec62bd62939bab778925d9c312';
+String _$dropboxLoginHash() => r'4ddf2d37415ef3f67343f8cf7b7d3dc5d17c22e5';
 
 abstract class _$DropboxLogin extends $AsyncNotifier<AccessTokenResponse?> {
   FutureOr<AccessTokenResponse?> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref
             as $Ref<AsyncValue<AccessTokenResponse?>, AccessTokenResponse?>;
@@ -54,6 +54,6 @@ abstract class _$DropboxLogin extends $AsyncNotifier<AccessTokenResponse?> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

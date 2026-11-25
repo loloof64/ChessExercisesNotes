@@ -12,8 +12,7 @@ class SyncManifestService {
 
   final Directory _appSupportDir;
 
-  SyncManifestService({required Directory appSupportDir})
-    : _appSupportDir = appSupportDir;
+  SyncManifestService({required this._appSupportDir});
 
   File get _manifestFile =>
       File(p.join(_appSupportDir.path, _manifestFileName));

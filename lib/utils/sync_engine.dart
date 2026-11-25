@@ -65,13 +65,11 @@ class SyncEngine {
   final void Function(int total, int completed)? onProgress;
 
   SyncEngine({
-    required DropboxApiService api,
-    required Directory localBooksDir,
-    required Set<String> previousManifest,
+    required this._api,
+    required this._localBooksDir,
+    required this._previousManifest,
     this.onProgress,
-  }) : _api = api,
-       _localBooksDir = localBooksDir,
-       _previousManifest = previousManifest;
+  });
 
   /// Run the full bidirectional sync.
   /// Returns the set of all synced paths (to be saved as the new manifest).

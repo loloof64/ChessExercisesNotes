@@ -3,14 +3,16 @@ import 'dart:io';
 import 'package:chess_exercises_notes/pages/books.dart';
 import 'package:chess_exercises_notes/providers/dark_theme_provider.dart';
 import 'package:chess_exercises_notes/providers/dropbox_login_provider.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
 import 'package:flutter_i18n/loaders/decoders/yaml_decode_strategy.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    show GlobalWidgetsLocalizations;
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:chess_exercises_notes/models/synchronisation_items/dropbox_oauth2_client.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:chess_exercises_notes/providers/dropbox_account_notifier.dart';
 import 'package:chess_exercises_notes/models/synchronisation_items/dropbox_account.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -60,7 +60,7 @@ class DropboxLogin extends _$DropboxLogin {
 
     // fetch and populate DropboxAccount for UI
     try {
-      final access = token?.accessToken;
+      final access = token.accessToken;
       if (access != null) await _fetchAndSetAccount(access);
       // trigger a sync after interactive login
       if (access != null) {
@@ -83,7 +83,7 @@ class DropboxLogin extends _$DropboxLogin {
 
     state = AsyncValue.data(token);
 
-    return token?.accessToken;
+    return token.accessToken;
   }
 
   /// Logout
@@ -153,7 +153,7 @@ class DropboxLogin extends _$DropboxLogin {
       final token = await _helper.getToken();
 
       // If token exists and not expired
-      return token?.accessToken != null;
+      return token.accessToken != null;
     } catch (_) {
       return false;
     }

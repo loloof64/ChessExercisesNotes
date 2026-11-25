@@ -5,7 +5,7 @@ import 'package:chess_exercises_notes/models/synchronisation_items/sync_state.da
 import 'package:chess_exercises_notes/providers/dropbox_account_notifier.dart';
 import 'package:chess_exercises_notes/providers/dropbox_login_provider.dart';
 import 'package:chess_exercises_notes/providers/sync_provider.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chess_exercises_notes/providers/dark_theme_provider.dart';
