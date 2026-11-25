@@ -39,3 +39,17 @@ String secureFileItemName(String originalName) {
       .replaceAll(RegExp(r'[^\w\s-]'), '')
       .replaceAll(' ', '_');
 }
+
+/// Names of the book or chapter folders which can be displayed. A sync creates
+/// folders before downloading their files, so some may lack metadata for now.
+Future<List<String>> listItemFolderNames(Directory dir) async {
+  final names = <String>[];
+
+  for (final name in await listSubdirectoryNames(dir)) {
+    if (await File(p.join(dir.path, name, metadataFileName)).exists()) {
+      names.add(name);
+    }
+  }
+
+  return names;
+}

@@ -200,7 +200,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
     final chaptersDir = Directory(p.join(booksDir.path, widget.bookFolderName));
     await chaptersDir.create();
 
-    final children = await listSubdirectoryNames(chaptersDir);
+    final children = await listItemFolderNames(chaptersDir);
     final newChapters = <Chapter>[];
 
     for (final child in children) {

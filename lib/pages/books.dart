@@ -224,7 +224,7 @@ class _BooksPageWidgetState extends ConsumerState<BooksPageWidget> {
     );
     await booksDir.create();
 
-    final children = await listSubdirectoryNames(booksDir);
+    final children = await listItemFolderNames(booksDir);
     final newBooks = <Book>[];
     for (final child in children) {
       final currentBookDirectory = Directory(p.join(booksDir.path, child));
