@@ -355,7 +355,7 @@ class SyncEngine {
         p.join(_localBooksDir.parent.path, local.originalRelativePath),
       );
       final localBytes = localFile.readAsBytesSync();
-      final localHash = _computeDropboxContentHash(localBytes);
+      final localHash = computeDropboxContentHash(localBytes);
 
       if (localHash == remote.contentHash) return null; // identical
     }
@@ -504,20 +504,18 @@ class SyncEngine {
   // Dropbox content hash (SHA-256 of 4 MB block hashes)
   // ---------------------------------------------------------------------------
 
-  static String _computeDropboxContentHash(Uint8List fileBytes) {
+  @visibleForTesting
+  static String computeDropboxContentHash(Uint8List fileBytes) {
     const blockSize = 4 * 1024 * 1024; // 4 MB
     final blockHashes = <int>[];
 
-    if (fileBytes.isEmpty) {
-      blockHashes.addAll(sha256.convert(<int>[]).bytes);
-    } else {
-      for (var offset = 0; offset < fileBytes.length; offset += blockSize) {
-        final end = (offset + blockSize < fileBytes.length)
-            ? offset + blockSize
-            : fileBytes.length;
-        final block = fileBytes.sublist(offset, end);
-        blockHashes.addAll(sha256.convert(block).bytes);
-      }
+    // An empty file has no block: Dropbox then hashes an empty digest list.
+    for (var offset = 0; offset < fileBytes.length; offset += blockSize) {
+      final end = (offset + blockSize < fileBytes.length)
+          ? offset + blockSize
+          : fileBytes.length;
+      final block = fileBytes.sublist(offset, end);
+      blockHashes.addAll(sha256.convert(block).bytes);
     }
 
     final overallHash = sha256.convert(blockHashes);
