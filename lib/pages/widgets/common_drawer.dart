@@ -81,7 +81,7 @@ class _ConsumerDrawerState extends ConsumerState<CommonDrawer> {
 
       if (response.statusCode != 200) {
         debugPrint(
-          "Dropbox get_current_account failed: ${response.statusCode} ${response.body}",
+          "Dropbox get_current_account failed: ${response.statusCode}",
         );
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -100,7 +100,7 @@ class _ConsumerDrawerState extends ConsumerState<CommonDrawer> {
 
       if (data == null) {
         debugPrint(
-          "Dropbox get_current_account returned empty or invalid JSON: ${response.body}",
+          "Dropbox get_current_account returned empty or invalid JSON",
         );
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -115,7 +115,7 @@ class _ConsumerDrawerState extends ConsumerState<CommonDrawer> {
 
       final accountId = data['account_id'] as String?;
       if (accountId == null || accountId.isEmpty) {
-        debugPrint("Dropbox response missing account_id: ${response.body}");
+        debugPrint("Dropbox response missing account_id");
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -129,7 +129,7 @@ class _ConsumerDrawerState extends ConsumerState<CommonDrawer> {
 
       final email = data['email'] as String?;
       if (email == null || email.isEmpty) {
-        debugPrint("Dropbox response missing email: ${response.body}");
+        debugPrint("Dropbox response missing email");
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -167,7 +167,7 @@ class _ConsumerDrawerState extends ConsumerState<CommonDrawer> {
         ),
       );
     } catch (e, st) {
-      debugPrint("Error while login Dropbox account : $e\n$st");
+      debugPrint("Error while login Dropbox account : ${e.runtimeType}\n$st");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -310,17 +310,17 @@ class _ConsumerDrawerState extends ConsumerState<CommonDrawer> {
                 )
               else
                 ElevatedButton.icon(
-                  onPressed: () =>
-                      ref.read(syncProvider.notifier).sync().then((_) {
-                        if (!context.mounted) return;
-                        final state = ref.read(syncProvider);
-                        final snackKey = state.status == SyncStatus.error
-                            ? "options.snack_messages.dropbox.sync_error"
-                            : "options.snack_messages.dropbox.sync_success";
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: I18nText(snackKey)));
-                      }),
+                  onPressed: () => ref.read(syncProvider.notifier).sync().then((
+                    _,
+                  ) {
+                    if (!context.mounted) return;
+                    final state = ref.read(syncProvider);
+                    final snackKey = state.status == SyncStatus.error
+                        ? "options.snack_messages.dropbox.sync_error"
+                        : "options.snack_messages.dropbox.sync_success";
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: I18nText(snackKey)));
+                  }),
                   icon: const Icon(Icons.sync),
                   label: I18nText("options.dropbox.sync_button"),
                 ),

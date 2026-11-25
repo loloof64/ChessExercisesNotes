@@ -71,7 +71,9 @@ class DropboxLogin extends _$DropboxLogin {
         }
       }
     } catch (e) {
-      debugPrint('Failed to fetch Dropbox account after login: $e');
+      debugPrint(
+        'Failed to fetch Dropbox account after login: ${e.runtimeType}',
+      );
     }
 
     return token;
@@ -184,14 +186,18 @@ class DropboxLogin extends _$DropboxLogin {
       // The sync provider/engine already has safety guards (manifest,
       // deletion thresholds) to avoid destructive operations on first-run.
       if (success) {
-        ref.read(syncProvider.notifier).sync().then((_) {
-          debugPrint('Background sync after silent restore completed');
-        }).catchError((e) {
-          debugPrint('Background sync after silent restore failed: $e');
-        });
+        ref
+            .read(syncProvider.notifier)
+            .sync()
+            .then((_) {
+              debugPrint('Background sync after silent restore completed');
+            })
+            .catchError((e) {
+              debugPrint('Background sync after silent restore failed: $e');
+            });
       }
     } catch (e) {
-      debugPrint('Silent session restore failed: $e');
+      debugPrint('Silent session restore failed: ${e.runtimeType}');
       await _clearStoredTokens();
       state = const AsyncValue.data(null);
     }
@@ -206,9 +212,6 @@ class DropboxLogin extends _$DropboxLogin {
         'refresh_token': refreshToken,
         'client_id': 'oja5n3i5ibq4mdp',
       },
-    );
-    debugPrint(
-      'Dropbox refresh response status=${response.statusCode} body=${response.body}',
     );
     if (response.statusCode != 200) {
       debugPrint(
@@ -231,13 +234,9 @@ class DropboxLogin extends _$DropboxLogin {
     final tokenMap = <String, dynamic>{'access_token': access};
     if (refresh != null) tokenMap['refresh_token'] = refresh;
     if (expiresIn != null) tokenMap['expires_in'] = expiresIn;
-    debugPrint('Constructed tokenMap for AccessTokenResponse: $tokenMap');
 
     try {
       final tokenResp = AccessTokenResponse.fromMap(tokenMap);
-      debugPrint(
-        'AccessTokenResponse created: access=${tokenResp.accessToken} refresh=${tokenResp.refreshToken} expiresIn=${tokenResp.expiresIn}',
-      );
       state = AsyncValue.data(tokenResp);
       await _saveTokensToStorage(tokenResp);
 
@@ -248,14 +247,16 @@ class DropboxLogin extends _$DropboxLogin {
           await _fetchAndSetAccount(access);
         } catch (e) {
           debugPrint(
-            'Failed to fetch Dropbox account during silent restore: $e',
+            'Failed to fetch Dropbox account during silent restore: ${e.runtimeType}',
           );
         }
       }
 
       return true;
     } catch (e) {
-      debugPrint('Failed to construct AccessTokenResponse from refresh: $e');
+      debugPrint(
+        'Failed to construct AccessTokenResponse from refresh: ${e.runtimeType}',
+      );
       return false;
     }
   }
@@ -296,14 +297,8 @@ class DropboxLogin extends _$DropboxLogin {
         headers: {'Authorization': 'Bearer $accessToken'},
       );
 
-      debugPrint(
-        'get_current_account response status=${response.statusCode} body=${response.body}',
-      );
-
       if (response.statusCode != 200) {
-        debugPrint(
-          'Failed to fetch Dropbox account: ${response.statusCode} ${response.body}',
-        );
+        debugPrint('Failed to fetch Dropbox account: ${response.statusCode}');
         return;
       }
 
@@ -330,12 +325,9 @@ class DropboxLogin extends _$DropboxLogin {
         profilePhotoUrl: profilePhotoUrl,
       );
 
-      debugPrint(
-        'Setting DropboxAccount displayName=${account.displayName} email=${account.email} accountId=${account.accountId}',
-      );
       ref.read(dropboxAccountProvider.notifier).setAccount(account);
     } catch (e) {
-      debugPrint('Error while fetching Dropbox account: $e');
+      debugPrint('Error while fetching Dropbox account: ${e.runtimeType}');
     }
   }
 }
