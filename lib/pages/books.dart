@@ -7,6 +7,7 @@ import 'package:chess_exercises_notes/pages/widgets/books_page_widgets.dart';
 import 'package:chess_exercises_notes/pages/widgets/common_drawer.dart';
 import 'package:chess_exercises_notes/pages/widgets/dialog_buttons.dart';
 import 'package:chess_exercises_notes/pages/widgets/grid_item.dart';
+import 'package:chess_exercises_notes/providers/sync_provider.dart';
 import 'package:chess_exercises_notes/utils/filesystem.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
@@ -228,7 +229,6 @@ class _BooksPageWidgetState extends ConsumerState<BooksPageWidget> {
     final newBooks = <Book>[];
     for (final child in children) {
       final currentBookDirectory = Directory(p.join(booksDir.path, child));
-      await currentBookDirectory.create();
 
       final relatedBook = await getBookFromFile(
         currentBookDirectory,
@@ -237,6 +237,7 @@ class _BooksPageWidgetState extends ConsumerState<BooksPageWidget> {
       newBooks.add(relatedBook);
     }
 
+    if (!mounted) return;
     setState(() {
       _books = newBooks;
       _isLoading = false;
@@ -256,6 +257,7 @@ class _BooksPageWidgetState extends ConsumerState<BooksPageWidget> {
 
   @override
   Widget build(BuildContext context) {
+    listenForSyncEnd(ref, _refreshFolderItems);
     final screenWidth = MediaQuery.widthOf(context);
     final gridCrossAxisCount = (screenWidth / gridElementWidth).floor();
 

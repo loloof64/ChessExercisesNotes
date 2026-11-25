@@ -7,13 +7,15 @@ import 'package:chess_exercises_notes/pages/widgets/chapters_page_widgets.dart';
 import 'package:chess_exercises_notes/pages/widgets/common_drawer.dart';
 import 'package:chess_exercises_notes/pages/widgets/dialog_buttons.dart';
 import 'package:chess_exercises_notes/pages/widgets/grid_item.dart';
+import 'package:chess_exercises_notes/providers/sync_provider.dart';
 import 'package:chess_exercises_notes/utils/filesystem.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-class ChaptersPageWidget extends StatefulWidget {
+class ChaptersPageWidget extends ConsumerStatefulWidget {
   const ChaptersPageWidget({
     super.key,
     required this.bookFolderName,
@@ -25,10 +27,10 @@ class ChaptersPageWidget extends StatefulWidget {
   final String? bookAuthors;
 
   @override
-  State<ChaptersPageWidget> createState() => _ChaptersPageWidgetState();
+  ConsumerState<ChaptersPageWidget> createState() => _ChaptersPageWidgetState();
 }
 
-class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
+class _ChaptersPageWidgetState extends ConsumerState<ChaptersPageWidget> {
   bool _isLoading = false;
   List<Chapter> _chapters = [];
   final TextEditingController _newChapterNameController =
@@ -198,16 +200,17 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
     await booksDir.create();
 
     final chaptersDir = Directory(p.join(booksDir.path, widget.bookFolderName));
-    await chaptersDir.create();
-
-    final children = await listItemFolderNames(chaptersDir);
+    // Never create it here: a sync may just have deleted this book, and the
+    // next one would upload the folder again.
+    final children = await chaptersDir.exists()
+        ? await listItemFolderNames(chaptersDir)
+        : <String>[];
     final newChapters = <Chapter>[];
 
     for (final child in children) {
       final currentChapterDirectory = Directory(
         p.join(chaptersDir.path, child),
       );
-      await currentChapterDirectory.create();
 
       final relatedChapter = await getChapterFromFile(
         currentChapterDirectory,
@@ -216,6 +219,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
       newChapters.add(relatedChapter);
     }
 
+    if (!mounted) return;
     setState(() {
       _chapters = newChapters;
       _isLoading = false;
@@ -340,6 +344,7 @@ class _ChaptersPageWidgetState extends State<ChaptersPageWidget> {
 
   @override
   Widget build(BuildContext context) {
+    listenForSyncEnd(ref, _refreshFolderItems);
     final screenWidth = MediaQuery.widthOf(context);
     final gridCrossAxisCount = (screenWidth / gridElementWidth).floor();
 

@@ -7,6 +7,7 @@ import 'package:chess_exercises_notes/utils/filesystem.dart';
 import 'package:chess_exercises_notes/utils/sync_engine.dart';
 import 'package:chess_exercises_notes/utils/sync_manifest_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -71,4 +72,14 @@ class Sync extends _$Sync {
       state = SyncState(status: SyncStatus.error, errorMessage: e.toString());
     }
   }
+}
+
+/// Calls [onSyncEnd] whenever a sync finishes. A failed one counts too, as it
+/// may have changed some files. Must be called from a build method.
+void listenForSyncEnd(WidgetRef ref, VoidCallback onSyncEnd) {
+  ref.listen(syncProvider, (_, next) {
+    if (next.status == SyncStatus.success || next.status == SyncStatus.error) {
+      onSyncEnd();
+    }
+  });
 }

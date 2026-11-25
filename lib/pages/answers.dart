@@ -4,9 +4,11 @@ import 'package:chess_exercises_notes/models/local_items/answer.dart';
 import 'package:chess_exercises_notes/pages/widgets/answers_page_widget.dart';
 import 'package:chess_exercises_notes/pages/widgets/common_drawer.dart';
 import 'package:chess_exercises_notes/pages/widgets/dialog_buttons.dart';
+import 'package:chess_exercises_notes/providers/sync_provider.dart';
 import 'package:chess_exercises_notes/utils/filesystem.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_i18n/widgets/i18n_text.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
@@ -17,7 +19,7 @@ class AnswerData {
   AnswerData(this.answer, this.fileName);
 }
 
-class AnswerPageWidget extends StatefulWidget {
+class AnswerPageWidget extends ConsumerStatefulWidget {
   const AnswerPageWidget({
     super.key,
     required this.bookFolderName,
@@ -33,10 +35,10 @@ class AnswerPageWidget extends StatefulWidget {
   final String chapterName;
 
   @override
-  State<AnswerPageWidget> createState() => _AnswerPageWidgetState();
+  ConsumerState<AnswerPageWidget> createState() => _AnswerPageWidgetState();
 }
 
-class _AnswerPageWidgetState extends State<AnswerPageWidget> {
+class _AnswerPageWidgetState extends ConsumerState<AnswerPageWidget> {
   List<AnswerData> _answers = <AnswerData>[];
   bool _isLoading = false;
   final TextEditingController _newAnswerNameController =
@@ -130,16 +132,15 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
     await booksDir.create();
 
     final chaptersDir = Directory(p.join(booksDir.path, widget.bookFolderName));
-    await chaptersDir.create();
 
     final exercisesDir = Directory(
       p.join(chaptersDir.path, widget.chapterFolderName),
     );
 
-    final childrenFiles = await exercisesDir
-        .list()
-        .where((elt) => elt is File)
-        .toList();
+    // A sync may just have deleted this chapter: never create it here.
+    final childrenFiles = await exercisesDir.exists()
+        ? await exercisesDir.list().where((elt) => elt is File).toList()
+        : <FileSystemEntity>[];
     final newAnswers = <AnswerData>[];
 
     for (final child in childrenFiles) {
@@ -160,6 +161,7 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
       return fst.answer.title.compareTo(snd.answer.title);
     });
 
+    if (!mounted) return;
     setState(() {
       _answers = newAnswers;
       _isLoading = false;
@@ -296,6 +298,7 @@ class _AnswerPageWidgetState extends State<AnswerPageWidget> {
 
   @override
   Widget build(BuildContext context) {
+    listenForSyncEnd(ref, _refreshFolderItems);
     final answerTitles = _answers
         .map((current) => current.answer.title)
         .toList();
