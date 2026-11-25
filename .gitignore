@@ -47,3 +47,5 @@ app.*.map.json
 *~
 .vscode/
 encoded.txt
+# Keystore et mots de passe Android : ne jamais commiter
+/secrets/

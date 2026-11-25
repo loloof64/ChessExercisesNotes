@@ -1,3 +1,12 @@
+# v1.1.0
+
+- feat: refresh books, chapters and answers pages automatically after a sync
+- fix : ignore book and chapter folders whose metadata is not downloaded yet
+- fix : stop re-uploading empty files on every sync
+- fix : stop logging Dropbox tokens and account data
+- chore: upgrade to Flutter 3.50 and migrate to material_ui
+- chore: new Android signing key (the app must be uninstalled before installing this version)
+
 # v0.1.27
 
 - fix : editing a book created a new one instead of renaming it
